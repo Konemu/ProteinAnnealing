@@ -6,7 +6,7 @@ import randomwalk
 
 
 def main():
-    grid, coord_vec = randomwalk.self_avoiding_walk_protein(5, 20)
+    grid, coord_vec = randomwalk.random_walk(5, 100)
     print(grid)
     for coord in coord_vec:
         print(coord.x, coord.y, coord.amin)
