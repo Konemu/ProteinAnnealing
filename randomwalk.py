@@ -1,7 +1,10 @@
 # libs
 import numpy as np
 from numpy.random import randint
-from numba import njit, prange, int32
+import matplotlib.pyplot as plt
+from matplotlib.cm import ScalarMappable
+import matplotlib.colors as cols
+from numba import njit, int32
 from numba.experimental import jitclass
 
 # transform grid coordinates into indices
@@ -59,6 +62,8 @@ def self_avoiding_step(dim, i, j, grid):
     for bool in step_truth_values:
         if bool:
             true_count += 1
+    if true_count == 0:
+        return new_i, new_j
 
     # generate random number between 1 and # of valid steps + 1
     # to choose a step randomly with equal probability
@@ -115,6 +120,8 @@ def random_step(dim, i, j, grid):
     for bool in step_truth_values:
         if bool:
             true_count += 1
+    if true_count == 0:
+        return new_i, new_j
 
     # generate random number between 1 and # of valid steps + 1
     # to choose a step randomly with equal probability
@@ -251,4 +258,58 @@ def random_walk(dim, steps):
 
     return grid, coord_vec
 
+def plot_grid(coord_vec, dim, path):
+    fig, ax = plt.subplots()
+    for i in range(len(coord_vec)):
+        ax.add_artist(plt.Circle((coord_vec[i].x, coord_vec[i].y), 0.1, color = "black"))
+        if i > 0:
+            ax.plot([coord_vec[i].x, coord_vec[i-1].x], [coord_vec[i].y, coord_vec[i-1].y], color="black")
+    ax.set_xlim([-dim - 1, dim + 1])
+    ax.set_ylim([-dim - 1, dim + 1])
+    ax.set_title(f"{len(coord_vec)} steps")
+    ax.set_xlabel("$x$")
+    ax.set_ylabel("$y$")
+    ax.set_aspect('equal')
+    fig.savefig(path)
+    return fig, ax
 
+def plot_protein(coord_vec, dim, path):
+    fig, ax = plt.subplots()
+    for i in range(len(coord_vec)):
+        if i > 0:
+            ax.plot([coord_vec[i].x, coord_vec[i-1].x], [coord_vec[i].y, coord_vec[i-1].y], color="black")
+    for i in range(len(coord_vec)):
+        ax.add_artist(plt.Circle((coord_vec[i].x, coord_vec[i].y), 0.3, color = cmap[coord_vec[i].amin - 1]))
+
+    ax.set_xlim([-dim - 1, dim + 1])
+    ax.set_ylim([-dim - 1, dim + 1])
+    ax.set_title(f"{len(coord_vec)} peptids")
+    ax.set_xlabel("$x$")
+    ax.set_ylabel("$y$")
+    ax.set_aspect('equal')
+    fig.colorbar(ScalarMappable(norm = cols.Normalize(1, 20), cmap=cols.LinearSegmentedColormap.from_list("a", cmap, 20)), 
+                                ax=ax, label="Amino acid", ticks = [i for i in range(1, 21)])
+    fig.savefig(path)
+    return fig, ax
+
+cmap = ["#6C00E6",
+        "#A300E4",
+        "#D800E1",
+        "#DF00B3",
+        "#DD007E",
+        "#DA004A",
+        "#D80017",
+        "#D60000",
+        "#D30900",
+        "#D13A00",
+        "#CF6900",
+        "#CC9600",
+        "#CAC200",
+        "#A4C800",
+        "#77C500",
+        "#4DC300",
+        "#24C100",
+        "#00BE00",
+        "#00BC18",
+        "#00BA40",
+        "#00B766"]
