@@ -49,6 +49,7 @@ def eigenvalue_statistics(runs, path):
 
     fig.savefig(path)
 
+
     return fig, ax, eigenvalues, ev_mean, ev_std # return everything!!1!
 
 
