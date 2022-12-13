@@ -1,9 +1,12 @@
 # libs
 import numpy as np
 import matplotlib.pyplot as plt
-from numpy.random import normal
-from numba import jit, njit, prange
+from numpy.random import normal, randint, rand
+from numba import njit, prange, typed
+from copy import deepcopy
 
+# code
+import randomwalk
 
 # generate random exchange matrix elements with exp. value 3 and stddev 1/sqrt(2)
 @njit
@@ -17,6 +20,140 @@ def random_exchange_matrix():
     # (here mu_1 = mu_2 so we divide by two to recover the original distribution)
     J_symm = (J_non_symm + J_non_symm.T) / 2
     return J_symm
+
+
+@njit
+def monte_carlo_step(grid, coord_vec, J, T):
+    protein_length = len(coord_vec)
+    m = randint(0, protein_length)
+    i, j = coord_vec[m].i, coord_vec[m].j
+    new_grid, new_coord_vec = check_and_perform_fold(grid, coord_vec, J, T, m, i, j,  1,  1)
+    new_grid, new_coord_vec = check_and_perform_fold(grid, coord_vec, J, T, m, i, j,  1, -1)
+    new_grid, new_coord_vec = check_and_perform_fold(grid, coord_vec, J, T, m, i, j, -1,  1)
+    new_grid, new_coord_vec = check_and_perform_fold(grid, coord_vec, J, T, m, i, j, -1, -1)
+
+    return new_grid, new_coord_vec
+
+
+@njit
+def check_and_perform_fold(grid, coord_vec, J, T, m, i, j, delta_i, delta_j):
+    if check_fold_validity(grid, coord_vec, m, i, j,  delta_i,  delta_j):
+        new_grid = copy_grid(grid)
+        new_grid[i  ,   j] = 0
+        new_grid[i+delta_i, j+delta_j] = grid[i, j]
+        new_coord_vec = copy_coord_vec(coord_vec)
+        new_coord_vec[m].move_to_indices(i+delta_i, j+delta_j)
+        delta_E = local_erg(new_grid, new_coord_vec, m, J) - local_erg(grid, coord_vec, m, J)
+        if delta_E < 0:
+            return new_grid, new_coord_vec
+        elif rand() < np.exp(-delta_E/T):
+            return new_grid, new_coord_vec
+
+    return grid, coord_vec
+
+@njit
+def copy_grid(old):
+    dim = len(old[0])
+    new = np.zeros((dim, dim), dtype=np.int32)
+    for i in range(dim):
+        for j in range(dim):
+            new[i][j] = old[i][j]
+    return new
+
+@njit
+def copy_coord_vec(old):
+    new = [randomwalk.coord(0, 0, 0, 0)] * len(old)
+    new = typed.List(new) 
+    for m in range(len(old)):
+        cp = old[m]
+        new[m] = randomwalk.coord(cp.x, cp.y, cp.amin, cp.dim)
+    return new
+
+
+
+@njit
+def check_fold_validity(grid, coord_vec, m, i, j, delta_i, delta_j):
+    if i+delta_i < 0 or i+delta_i >= len(grid[0]) or j+delta_j < 0 or j+delta_j >= len(grid[0]):
+        return False
+    if m == 0:
+        if grid[i+delta_i][j+delta_j] == 0  and [coord_vec[m+1].i, coord_vec[m+1].j] == [i+delta_i, j]:
+            return True
+        if grid[i+delta_i][j+delta_j] == 0  and [coord_vec[m+1].i, coord_vec[m+1].j] == [i, j+delta_j]:
+            return True
+    elif m == len(coord_vec)-1:
+        if grid[i+delta_i][j+delta_j] == 0  and [coord_vec[m-1].i, coord_vec[m-1].j] == [i, j+delta_j]:
+            return True
+        if grid[i+delta_i][j+delta_j] == 0  and [coord_vec[m-1].i, coord_vec[m-1].j] == [i+delta_i, j]:
+            return True
+    else:
+        if grid[i+delta_i][j+delta_j] == 0  and [coord_vec[m-1].i, coord_vec[m-1].j] == [i, j+delta_j] \
+                and [coord_vec[m+1].i, coord_vec[m+1].j] == [i+delta_i, j]:
+            return True
+        if grid[i+delta_i][j+delta_j] == 0  and [coord_vec[m+1].i, coord_vec[m+1].j] == [i, j+delta_j] \
+                and [coord_vec[m-1].i, coord_vec[m-1].j] == [i+delta_i, j]:
+            return True
+    return False        
+
+
+@njit
+def total_erg(grid, coord_vec, J):
+    E = 0
+    return E
+
+
+@njit
+def local_erg(grid, coord_vec, m, J):
+    E = 0
+    if 0 < m < len(coord_vec)-1:
+        current = coord_vec[m]
+        behind  = coord_vec[m-1]
+        front   = coord_vec[m+1]
+        i, j = current.i, current.j
+        upper_neighbour = grid[i][j+1]
+        right_neighbour = grid[i+1][j]
+        lower_neighbour = grid[i][j-1]
+        left_neighbour  = grid[i-1][j]
+        if upper_neighbour != 0 and [i, j+1] != [front.i, front.j] and [i, j+1] != [behind.i, behind.j]:
+            E += J[upper_neighbour - 1][current.amin - 1]
+        if right_neighbour != 0 and [i+1, j] != [front.i, front.j] and [i+1, j] != [behind.i, behind.j]:
+            E += J[right_neighbour - 1][current.amin - 1]
+        if lower_neighbour != 0 and [i, j-1] != [front.i, front.j] and [i, j-1] != [behind.i, behind.j]:
+            E += J[lower_neighbour - 1][current.amin - 1]
+        if left_neighbour  != 0 and [i-1, j] != [front.i, front.j] and [i-1, j] != [behind.i, behind.j]:
+            E += J[left_neighbour - 1][current.amin - 1]
+    elif m == 0:
+        current = coord_vec[m]        
+        front   = coord_vec[m+1]
+        i, j = current.i, current.j
+        upper_neighbour = grid[i][j+1]
+        right_neighbour = grid[i+1][j]
+        lower_neighbour = grid[i][j-1]
+        left_neighbour  = grid[i-1][j]
+        if upper_neighbour != 0 and [i, j+1] != [front.i, front.j]:
+            E += J[upper_neighbour - 1][current.amin - 1]
+        if right_neighbour != 0 and [i+1, j] != [front.i, front.j]:
+            E += J[right_neighbour - 1][current.amin - 1]
+        if lower_neighbour != 0 and [i, j-1] != [front.i, front.j]:
+            E += J[lower_neighbour - 1][current.amin - 1]
+        if left_neighbour  != 0 and [i-1, j] != [front.i, front.j]:
+            E += J[left_neighbour - 1][current.amin - 1]
+    elif m == len(coord_vec)-1:
+        current = coord_vec[m]
+        behind  = coord_vec[m-1]
+        i, j = current.i, current.j
+        upper_neighbour = grid[i][j+1]
+        right_neighbour = grid[i+1][j]
+        lower_neighbour = grid[i][j-1]
+        left_neighbour  = grid[i-1][j]
+        if upper_neighbour != 0 and [i, j+1] != [behind.i, behind.j]:
+            E += J[upper_neighbour - 1][current.amin - 1]
+        if right_neighbour != 0 and [i+1, j] != [behind.i, behind.j]:
+            E += J[right_neighbour - 1][current.amin - 1]
+        if lower_neighbour != 0 and [i, j-1] != [behind.i, behind.j]:
+            E += J[lower_neighbour - 1][current.amin - 1]
+        if left_neighbour  != 0 and [i-1, j] != [behind.i, behind.j]:
+            E += J[left_neighbour - 1][current.amin - 1]
+    return E
 
 # helper function for eigenvalue_statistics to profit from numba
 @njit(parallel=True)

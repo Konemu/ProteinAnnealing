@@ -4,7 +4,7 @@ from numpy.random import randint
 import matplotlib.pyplot as plt
 from matplotlib.cm import ScalarMappable
 import matplotlib.colors as cols
-from numba import njit, int32
+from numba import njit, int32, typed
 from numba.experimental import jitclass
 
 # transform grid coordinates into indices
@@ -36,6 +36,19 @@ class coord(object):
         self.j = index_coord(x, y, dim)[1]
         self.amin = amin
         self.dim = dim
+    def __eq__(self, other): # two coords are equal if they have the same coordinates (ignore acid)
+        if self.x == other.x:
+            if self.y == other.y:
+                return True
+        return False
+    def move_to_indices(self, i, j):
+        self.i = i
+        self.j = j
+        [self.x, self.y] = spatial_coord(i, j, self.dim)
+    def move_to_spatial(self, x, y):
+        self.x = x
+        self.y = y
+        [self.i, self.j] = index_coord(x, y, self.dim)
 
 # this function randomly chooses a valid direction to move for the self avoiding walk
 # edges and occupied spaces are avoided
@@ -167,7 +180,8 @@ def self_avoiding_walk_protein(dim, steps):
     # init grid
     grid = np.zeros((2*dim+1, 2*dim+1), dtype=np.int32)
     # init vector, the coord(0, 0, 0, 0) object can be used later to check for validity!
-    coord_vec = [coord(0, 0, 0, 0)] * steps             
+    coord_vec = [coord(0, 0, 0, 0)] * steps
+    coord_vec = typed.List(coord_vec)             
     
     # generate first amino acid at (0, 0)
     coord_vec[0] = coord(0, 0, randint(1, 21), dim)             
@@ -202,7 +216,8 @@ def self_avoiding_walk(dim, steps):
     # init grid
     grid = np.zeros((2*dim+1, 2*dim+1), dtype=np.int32)
     # init vector, the coord(0, 0, 0, 0) object can be used later to check for validity!
-    coord_vec = [coord(0, 0, 0, 0)] * steps             
+    coord_vec = [coord(0, 0, 0, 0)] * steps       
+    coord_vec = typed.List(coord_vec)       
     
     # generate first node at (0, 0)
     coord_vec[0] = coord(0, 0, 1, dim)             
@@ -237,7 +252,8 @@ def random_walk(dim, steps):
     # init grid
     grid = np.zeros((2*dim+1, 2*dim+1), dtype=np.int32)
     # init vector, the coord(0, 0, 0, 0) object can be used later to check for validity!
-    coord_vec = [coord(0, 0, 0, 0)] * steps             
+    coord_vec = [coord(0, 0, 0, 0)] * steps 
+    coord_vec = typed.List(coord_vec)             
     
     # generate first node at (0, 0)
     coord_vec[0] = coord(0, 0, 1, dim)             
