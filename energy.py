@@ -22,6 +22,30 @@ def random_exchange_matrix():
     return J_symm
 
 
+def evolve_protein_plot_energy(dim, length, mc_steps, path):
+    grid, coord_vec = randomwalk.self_avoiding_walk_protein(dim, length)
+    while coord_vec[-1].x == 0:
+        grid, coord_vec = randomwalk.self_avoiding_walk_protein(dim, length)
+    randomwalk.plot_protein(coord_vec, dim/2, path+f"/protein_init_l_{length}.pdf") # plot initial state
+
+    J = random_exchange_matrix()
+    ergs = np.empty(mc_steps, dtype=np.double)
+    for k in range(mc_steps):
+        grid, coord_vec = monte_carlo_step(grid, coord_vec, J, 1)
+        ergs[k] = total_erg(grid, coord_vec, J)
+    randomwalk.plot_protein(coord_vec, dim/2, path+f"/protein_final_l_{length}_steps_{mc_steps}.pdf") # plot final state
+
+    fig, ax = plt.subplots()
+    ax.plot(np.asarray(range(mc_steps)), ergs, label=f"$L={length}$")
+    ax.set_xlabel("Time step $t$")
+    ax.set_ylabel("Total energy $E$")
+    ax.legend()
+    ax.set_title(f"{mc_steps} monte carlo steps")
+    fig.savefig(path+f"/energy_l_{length}_steps_{mc_steps}.pdf")
+    
+    return fig, ax, ergs, grid, coord_vec
+
+
 @njit
 def monte_carlo_step(grid, coord_vec, J, T):
     protein_length = len(coord_vec)
@@ -94,11 +118,13 @@ def check_fold_validity(grid, coord_vec, m, i, j, delta_i, delta_j):
             return True
     return False        
 
-
+#TODO
 @njit
 def total_erg(grid, coord_vec, J):
     E = 0
-    return E
+    for m in range(len(coord_vec)):
+        E += local_erg(grid, coord_vec, m, J)
+    return E/2
 
 
 @njit
