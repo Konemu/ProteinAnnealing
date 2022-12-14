@@ -26,7 +26,7 @@ def evolve_protein_plot_energy(dim, length, mc_steps, path):
     grid, coord_vec = randomwalk.self_avoiding_walk_protein(dim, length)
     while coord_vec[-1].x == 0:
         grid, coord_vec = randomwalk.self_avoiding_walk_protein(dim, length)
-    randomwalk.plot_protein(coord_vec, dim/2, path+f"/protein_init_l_{length}.pdf") # plot initial state
+    randomwalk.plot_protein(coord_vec, dim/2, path+f"/protein_init_l_{length}_steps_{mc_steps}.pdf") # plot initial state
 
     J = random_exchange_matrix()
     ergs = np.empty(mc_steps, dtype=np.double)
