@@ -22,21 +22,23 @@ def random_exchange_matrix():
     return J_symm
 
 
-def evolve_protein_plot_energy(dim, length, mc_steps, path):
-    grid, coord_vec = randomwalk.self_avoiding_walk_protein(dim, length)
-    while coord_vec[-1].x == 0:
-        grid, coord_vec = randomwalk.self_avoiding_walk_protein(dim, length)
-    randomwalk.plot_protein(coord_vec, dim/2, path+f"/protein_init_l_{length}_steps_{mc_steps}.pdf") # plot initial state
+# Generate a random protein of given length and evolve it mc_steps-times using the given monte carlo scheme
+# at temperature T, saving a plot of the total energy at path
+def evolve_protein_plot_energy(length, mc_steps, T, path):
+    grid, coord_vec = randomwalk.self_avoiding_walk_protein(length, length)
+    while coord_vec[-1].x == 0: # discard the protein and re-generate if it doesn't have full length
+        grid, coord_vec = randomwalk.self_avoiding_walk_protein(length, length)
+    randomwalk.plot_protein(coord_vec, length/3, path+f"/protein_init_l_{length}_steps_{mc_steps}.pdf") # plot initial state
 
-    J = random_exchange_matrix()
-    ergs = np.empty(mc_steps, dtype=np.double)
+    J = random_exchange_matrix() # generate a random exchange matrix
+    ergs = np.empty(mc_steps, dtype=np.double) # save energy at each step
     for k in range(mc_steps):
-        grid, coord_vec = monte_carlo_step(grid, coord_vec, J, 1)
-        ergs[k] = total_erg(grid, coord_vec, J)
-    randomwalk.plot_protein(coord_vec, dim/2, path+f"/protein_final_l_{length}_steps_{mc_steps}.pdf") # plot final state
+        grid, coord_vec = monte_carlo_step(grid, coord_vec, J, T) # perform mc steps
+        ergs[k] = total_erg_per_site(grid, coord_vec, J)
+    randomwalk.plot_protein(coord_vec, length/3, path+f"/protein_final_l_{length}_steps_{mc_steps}.pdf") # plot final state
 
     fig, ax = plt.subplots()
-    ax.plot(np.asarray(range(mc_steps)), ergs, label=f"$L={length}$")
+    ax.plot(np.asarray(range(mc_steps)), ergs, label=f"$L={length}$") # plot energy
     ax.set_xlabel("Time step $t$")
     ax.set_ylabel("Total energy $E$")
     ax.legend()
@@ -46,35 +48,42 @@ def evolve_protein_plot_energy(dim, length, mc_steps, path):
     return fig, ax, ergs, grid, coord_vec
 
 
+# Perform a mc step on the grid, coor_vec pair as explained on the exercise sheet at given temperature T.
 @njit
 def monte_carlo_step(grid, coord_vec, J, T):
     protein_length = len(coord_vec)
-    m = randint(0, protein_length)
-    i, j = coord_vec[m].i, coord_vec[m].j
-    new_grid, new_coord_vec = check_and_perform_fold(grid, coord_vec, J, T, m, i, j,  1,  1)
-    new_grid, new_coord_vec = check_and_perform_fold(grid, coord_vec, J, T, m, i, j,  1, -1)
-    new_grid, new_coord_vec = check_and_perform_fold(grid, coord_vec, J, T, m, i, j, -1,  1)
-    new_grid, new_coord_vec = check_and_perform_fold(grid, coord_vec, J, T, m, i, j, -1, -1)
+    m = randint(0, protein_length) # select random peptide
+    i, j = coord_vec[m].i, coord_vec[m].j # grid coords of the selected peptide
+
+    # check the validity of all theoretically possible folds and perform the valid one (depending on delta E, see below)
+    new_grid, new_coord_vec = check_and_perform_fold(grid, coord_vec, J, T, m, i, j,  1,  1) # up-right
+    new_grid, new_coord_vec = check_and_perform_fold(grid, coord_vec, J, T, m, i, j,  1, -1) # down-right
+    new_grid, new_coord_vec = check_and_perform_fold(grid, coord_vec, J, T, m, i, j, -1,  1) # up-left
+    new_grid, new_coord_vec = check_and_perform_fold(grid, coord_vec, J, T, m, i, j, -1, -1) # down-left
 
     return new_grid, new_coord_vec
 
 
+# Check if a fold is valid, calculate Delta E and return folded/original protein .
+# Delta i, j must be (1, 1), (1, -1), (-1, 1) or (-1, -1), since the folds move the peptide diagonally.
 @njit
 def check_and_perform_fold(grid, coord_vec, J, T, m, i, j, delta_i, delta_j):
-    if check_fold_validity(grid, coord_vec, m, i, j,  delta_i,  delta_j):
-        new_grid = copy_grid(grid)
+    if check_fold_validity(grid, coord_vec, m, i, j,  delta_i,  delta_j): # check fold, see below
+        new_grid = copy_grid(grid) # make a new copied grid and perform the fold on it
         new_grid[i  ,   j] = 0
         new_grid[i+delta_i, j+delta_j] = grid[i, j]
-        new_coord_vec = copy_coord_vec(coord_vec)
+        new_coord_vec = copy_coord_vec(coord_vec) # same spiel for the coordinate vector
         new_coord_vec[m].move_to_indices(i+delta_i, j+delta_j)
-        delta_E = local_erg(new_grid, new_coord_vec, m, J) - local_erg(grid, coord_vec, m, J)
-        if delta_E < 0:
+        delta_E = -(local_erg(new_grid, new_coord_vec, m, J) - local_erg(grid, coord_vec, m, J)) # +- ???
+        if delta_E < 0: # negative energy change: keep change
             return new_grid, new_coord_vec
-        elif rand() < np.exp(-delta_E/T):
+        elif rand() < np.exp(-delta_E/T): # positive energy change: keep change only at a certain chance
             return new_grid, new_coord_vec
 
     return grid, coord_vec
 
+
+# this does pretty much exactly what it says
 @njit
 def copy_grid(old):
     dim = len(old[0])
@@ -84,6 +93,8 @@ def copy_grid(old):
             new[i][j] = old[i][j]
     return new
 
+
+# this does pretty much exactly what it says
 @njit
 def copy_coord_vec(old):
     new = [randomwalk.coord(0, 0, 0, 0)] * len(old)
@@ -94,22 +105,23 @@ def copy_coord_vec(old):
     return new
 
 
-
+# check the validity of a certain fold and return truth value
+# delta i, j as above must correspond to a diagonal shift
 @njit
 def check_fold_validity(grid, coord_vec, m, i, j, delta_i, delta_j):
     if i+delta_i < 0 or i+delta_i >= len(grid[0]) or j+delta_j < 0 or j+delta_j >= len(grid[0]):
         return False
-    if m == 0:
+    if m == 0: # special case: first peptide
         if grid[i+delta_i][j+delta_j] == 0  and [coord_vec[m+1].i, coord_vec[m+1].j] == [i+delta_i, j]:
             return True
         if grid[i+delta_i][j+delta_j] == 0  and [coord_vec[m+1].i, coord_vec[m+1].j] == [i, j+delta_j]:
             return True
-    elif m == len(coord_vec)-1:
+    elif m == len(coord_vec)-1: # special case: last peptide
         if grid[i+delta_i][j+delta_j] == 0  and [coord_vec[m-1].i, coord_vec[m-1].j] == [i, j+delta_j]:
             return True
         if grid[i+delta_i][j+delta_j] == 0  and [coord_vec[m-1].i, coord_vec[m-1].j] == [i+delta_i, j]:
             return True
-    else:
+    else: # check if the chain is not broken by the fold and the translated-to space is not occupied
         if grid[i+delta_i][j+delta_j] == 0  and [coord_vec[m-1].i, coord_vec[m-1].j] == [i, j+delta_j] \
                 and [coord_vec[m+1].i, coord_vec[m+1].j] == [i+delta_i, j]:
             return True
@@ -118,27 +130,31 @@ def check_fold_validity(grid, coord_vec, m, i, j, delta_i, delta_j):
             return True
     return False        
 
-#TODO
+
+# Calculate total energy per site of a protein configuration
 @njit
-def total_erg(grid, coord_vec, J):
+def total_erg_per_site(grid, coord_vec, J):
     E = 0
     for m in range(len(coord_vec)):
-        E += local_erg(grid, coord_vec, m, J)
-    return E/2
+        # sum local ergs to get total erg. this counts every contribution twice so we divide by two below
+        E += local_erg(grid, coord_vec, m, J) 
+    return E/(2*len(coord_vec)) # per site!
 
 
+# calculate the local energy at a peptide side m, i.e. the energy caused by neighbour interactions
 @njit
 def local_erg(grid, coord_vec, m, J):
     E = 0
     if 0 < m < len(coord_vec)-1:
-        current = coord_vec[m]
-        behind  = coord_vec[m-1]
-        front   = coord_vec[m+1]
-        i, j = current.i, current.j
-        upper_neighbour = grid[i][j+1]
+        current = coord_vec[m] 
+        behind  = coord_vec[m-1] # get direct neighbours on the chain
+        front   = coord_vec[m+1] # which don't contribute
+        i, j = current.i, current.j    # current grid indices
+        upper_neighbour = grid[i][j+1] # neighbour peptide numbers
         right_neighbour = grid[i+1][j]
         lower_neighbour = grid[i][j-1]
         left_neighbour  = grid[i-1][j]
+        # here: check if neighbours are occupied and not direct chain neighbours. if so: add matrix element to E
         if upper_neighbour != 0 and [i, j+1] != [front.i, front.j] and [i, j+1] != [behind.i, behind.j]:
             E += J[upper_neighbour - 1][current.amin - 1]
         if right_neighbour != 0 and [i+1, j] != [front.i, front.j] and [i+1, j] != [behind.i, behind.j]:
@@ -147,7 +163,7 @@ def local_erg(grid, coord_vec, m, J):
             E += J[lower_neighbour - 1][current.amin - 1]
         if left_neighbour  != 0 and [i-1, j] != [front.i, front.j] and [i-1, j] != [behind.i, behind.j]:
             E += J[left_neighbour - 1][current.amin - 1]
-    elif m == 0:
+    elif m == 0: # special case: m is first peptide
         current = coord_vec[m]        
         front   = coord_vec[m+1]
         i, j = current.i, current.j
@@ -163,7 +179,7 @@ def local_erg(grid, coord_vec, m, J):
             E += J[lower_neighbour - 1][current.amin - 1]
         if left_neighbour  != 0 and [i-1, j] != [front.i, front.j]:
             E += J[left_neighbour - 1][current.amin - 1]
-    elif m == len(coord_vec)-1:
+    elif m == len(coord_vec)-1: # special case: m is last peptide
         current = coord_vec[m]
         behind  = coord_vec[m-1]
         i, j = current.i, current.j

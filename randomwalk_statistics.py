@@ -98,7 +98,7 @@ def mean_sq_pos_stats(runs, dim, steps, path):
     return fig, ax, x2s, y2s
 
 
-# like both the above but combined.
+# like both of the above but combined.
 def mean_sq_pos_stats_both(runs, dim, steps, path):
     fig1, ax1, x2s_r, y2s_r = mean_sq_pos_stats(runs, dim, steps, path)
     fig2, ax2, x2s_sa, y2s_sa, eff_runs = mean_sq_pos_stats_self_avoiding(runs, dim, steps, path)
