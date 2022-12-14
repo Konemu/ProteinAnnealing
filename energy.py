@@ -1,6 +1,7 @@
 # libs
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation, PillowWriter
 from numpy.random import normal, randint, rand
 from numba import njit, prange, typed
 from copy import deepcopy
@@ -232,4 +233,44 @@ def eigenvalue_statistics(runs, path):
     return fig, ax, eigenvalues, ev_mean, ev_std # return everything!!1!
 
 
+def animated_monte_carlo(length, mc_steps, T, frame_interval, path):
+    num_frames = int(mc_steps/frame_interval)
+    grid, coord_vec = randomwalk.self_avoiding_walk_protein(length, length)
+    while coord_vec[-1].x == 0: # discard the protein and re-generate if it doesn't have full length
+        grid, coord_vec = randomwalk.self_avoiding_walk_protein(length, length)
+
+    J = random_exchange_matrix() # generate a random exchange matrix
+    ergs = np.empty(mc_steps, dtype=np.double) # save energy at each step
+    grids_vecs = [[grid, coord_vec]]
+    for k in range(mc_steps):
+        grid, coord_vec = monte_carlo_step(grid, coord_vec, J, T) # perform mc steps
+        if k % frame_interval == 0:
+            grids_vecs.append([grid, coord_vec])
+        ergs[k] = total_erg_per_site(grid, coord_vec, J)
+    
+    fig, [ax1, ax2] = plt.subplots(1, 1)
+    for i in range(len(grids_vecs[0][1])):
+        if i > 0:
+            ax1.plot([grids_vecs[0][1][i].x, grids_vecs[0][1][i-1].x], [grids_vecs[0][1][i].y, grids_vecs[0][1][i-1].y], color="black")
+    for i in range(len(grids_vecs[0][1])):
+        ax1.add_artist(plt.Circle((grids_vecs[0][1][i].x, grids_vecs[0][1][i].y), 0.3, color = randomwalk.cmap[grids_vecs[0][1][i].amin - 1]))
+    ax2.plot([0], ergs[0], label=f"$L={length}$")
+    
+    anim = FuncAnimation(fig, anim_update, frames=np.asarray(range(num_frames)), fargs=(frame_interval, fig, ax1, ax2, grids_vecs, ergs), interval=100)
+    writer = PillowWriter(fps=30)
+    anim.save(path+f"/anim_test.pdf", writer=writer)
+    
+    return
+
+
+def anim_update(frame, frame_interval, fig, ax1, ax2, grids_vecs, ergs):
+    tot_frames = len(grids_vecs)
+    for i in range(len(grids_vecs[frame*frame_interval][1])):
+        if i > 0:
+            ax1.plot([grids_vecs[frame*frame_interval][1][i].x, grids_vecs[frame*frame_interval][1][i-1].x], [grids_vecs[frame*frame_interval][1][i].y, 
+                grids_vecs[frame*frame_interval][1][i-1].y], color="black")
+    for i in range(len(grids_vecs[frame*frame_interval][1])):
+        ax1.add_artist(plt.Circle((grids_vecs[frame*frame_interval][1][i].x, grids_vecs[frame*frame_interval][1][i].y), 0.3, color = randomwalk.cmap[grids_vecs[frame*frame_interval][1][i].amin - 1]))
+    ax2.plot(np.asarray(range(frame*frame_interval)), ergs[:tot_frames-frame*frame_interval], label=f"$L={length}$")
+    return
     
