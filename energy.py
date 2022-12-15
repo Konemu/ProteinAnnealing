@@ -2,6 +2,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
+from matplotlib.cm import ScalarMappable
+import matplotlib.colors as cols
 from numpy.random import normal, randint, rand
 from numba import njit, prange, typed
 from copy import deepcopy
@@ -75,8 +77,8 @@ def check_and_perform_fold(grid, coord_vec, J, T, m, i, j, delta_i, delta_j):
         new_grid[i+delta_i, j+delta_j] = grid[i, j]
         new_coord_vec = copy_coord_vec(coord_vec) # same spiel for the coordinate vector
         new_coord_vec[m].move_to_indices(i+delta_i, j+delta_j)
-        delta_E = -(local_erg(new_grid, new_coord_vec, m, J) - local_erg(grid, coord_vec, m, J)) # +- ???
-        if delta_E < 0: # negative energy change: keep change
+        delta_E = +(local_erg(new_grid, new_coord_vec, m, J) - local_erg(grid, coord_vec, m, J)) # +- ???
+        if delta_E <= 0: # negative energy change: keep change
             return new_grid, new_coord_vec
         elif rand() < np.exp(-delta_E/T): # positive energy change: keep change only at a certain chance
             return new_grid, new_coord_vec
@@ -233,7 +235,7 @@ def eigenvalue_statistics(runs, path):
     return fig, ax, eigenvalues, ev_mean, ev_std # return everything!!1!
 
 
-def animated_monte_carlo(length, mc_steps, T, frame_interval, path):
+def animated_monte_carlo(length, mc_steps, T, frame_interval, fps, path):
     num_frames = int(mc_steps/frame_interval)
     grid, coord_vec = randomwalk.self_avoiding_walk_protein(length, length)
     while coord_vec[-1].x == 0: # discard the protein and re-generate if it doesn't have full length
@@ -247,30 +249,52 @@ def animated_monte_carlo(length, mc_steps, T, frame_interval, path):
         if k % frame_interval == 0:
             grids_vecs.append([grid, coord_vec])
         ergs[k] = total_erg_per_site(grid, coord_vec, J)
+
+    print("MC done, saving gif. This may take a while.")
     
-    fig, [ax1, ax2] = plt.subplots(1, 1)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(30, 15))
     for i in range(len(grids_vecs[0][1])):
         if i > 0:
             ax1.plot([grids_vecs[0][1][i].x, grids_vecs[0][1][i-1].x], [grids_vecs[0][1][i].y, grids_vecs[0][1][i-1].y], color="black")
     for i in range(len(grids_vecs[0][1])):
         ax1.add_artist(plt.Circle((grids_vecs[0][1][i].x, grids_vecs[0][1][i].y), 0.3, color = randomwalk.cmap[grids_vecs[0][1][i].amin - 1]))
-    ax2.plot([0], ergs[0], label=f"$L={length}$")
+    ax2.plot([0], ergs[0], color="red")
     
-    anim = FuncAnimation(fig, anim_update, frames=np.asarray(range(num_frames)), fargs=(frame_interval, fig, ax1, ax2, grids_vecs, ergs), interval=100)
-    writer = PillowWriter(fps=30)
-    anim.save(path+f"/anim_test.pdf", writer=writer)
+    ax1.set_xlim([-length/3, length/3])
+    ax1.set_ylim([-length/3, length/3])
+    ax1.set_title(f"{len(coord_vec)} peptids, $T={T}$")
+    ax1.set_xlabel("$x$")
+    ax1.set_ylabel("$y$")
+    ax1.set_aspect('equal')
+    ax2.set_xlabel("Time step $t$")
+    ax2.set_ylabel("Total energy $E$")
+    ax2.set_title(f"{mc_steps} monte carlo steps")
+    fig.colorbar(ScalarMappable(norm = cols.Normalize(1, 20), cmap=cols.LinearSegmentedColormap.from_list("a", randomwalk.cmap, 20)), 
+                                ax=ax1, label="Amino acid")
+    fig.tight_layout()
+    
+    
+    anim = FuncAnimation(fig, anim_update, frames=num_frames, fargs=(frame_interval, fig, ax1, ax2, grids_vecs, ergs, length, T), interval=100, blit=False)
+    writer = PillowWriter(fps=fps)
+    anim.save(path+f"/anim_test.gif", writer=writer)
     
     return
 
 
-def anim_update(frame, frame_interval, fig, ax1, ax2, grids_vecs, ergs):
+def anim_update(frame, frame_interval, fig, ax1, ax2, grids_vecs, ergs, length, T):
+    ax1.clear()
+    ax1.set_xlim([-length/3, length/3])
+    ax1.set_ylim([-length/3, length/3])
+    ax1.set_title(f"{len(grids_vecs[0][1])} peptids, $T={T}$")
+    ax1.set_xlabel("$x$")
+    ax1.set_ylabel("$y$")
     tot_frames = len(grids_vecs)
-    for i in range(len(grids_vecs[frame*frame_interval][1])):
+    for i in range(len(grids_vecs[frame][1])):
         if i > 0:
-            ax1.plot([grids_vecs[frame*frame_interval][1][i].x, grids_vecs[frame*frame_interval][1][i-1].x], [grids_vecs[frame*frame_interval][1][i].y, 
-                grids_vecs[frame*frame_interval][1][i-1].y], color="black")
-    for i in range(len(grids_vecs[frame*frame_interval][1])):
-        ax1.add_artist(plt.Circle((grids_vecs[frame*frame_interval][1][i].x, grids_vecs[frame*frame_interval][1][i].y), 0.3, color = randomwalk.cmap[grids_vecs[frame*frame_interval][1][i].amin - 1]))
-    ax2.plot(np.asarray(range(frame*frame_interval)), ergs[:tot_frames-frame*frame_interval], label=f"$L={length}$")
+            ax1.plot([grids_vecs[frame][1][i].x, grids_vecs[frame][1][i-1].x], [grids_vecs[frame][1][i].y, 
+                grids_vecs[frame][1][i-1].y], color="black")
+    for i in range(len(grids_vecs[frame][1])):
+        ax1.add_artist(plt.Circle((grids_vecs[frame][1][i].x, grids_vecs[frame][1][i].y), 0.3, color = randomwalk.cmap[grids_vecs[frame][1][i].amin - 1]))
+    ax2.plot(range(frame*frame_interval), ergs[:frame*frame_interval], color="red")
     return
     

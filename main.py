@@ -14,8 +14,8 @@ import randomwalk_statistics
 def main():
     #energy.eigenvalue_statistics(1000000, "data/eigenvalue_distribution.pdf")
     #randomwalk_statistics.mean_sq_pos_stats_both(10000, 100, 100, "data")
-    #energy.evolve_protein_plot_energy(100, 10000, 1, "data")
-    energy.animated_monte_carlo(30, 100, 1, 1, "data")
+    #energy.evolve_protein_plot_energy(100, 100000, 1, "data")
+    energy.animated_monte_carlo(50, 1000, 1, 1, 8, "data")
 
 
 if __name__=="__main__":
