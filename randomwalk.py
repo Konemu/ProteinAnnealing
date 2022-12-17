@@ -305,7 +305,8 @@ def plot_protein(coord_vec, dim, path):
     ax.set_aspect('equal')
     fig.colorbar(ScalarMappable(norm = cols.Normalize(1, 20), cmap=cols.LinearSegmentedColormap.from_list("a", cmap, 20)), 
                                 ax=ax, label="Amino acid", ticks = [i for i in range(1, 21)])
-    fig.savefig(path)
+    if path != "":
+        fig.savefig(path)
     return fig, ax
 
 cmap = ["#6C00E6",
