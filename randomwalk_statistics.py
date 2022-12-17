@@ -65,7 +65,8 @@ def mean_sq_pos_stats_self_avoiding(runs, dim, steps, path):
     ax.set_ylabel("Mean distance of walk from origin $d$")
     ax.set_title(f"Self-avoiding, {eff_runs} runs, {2*dim + 1}x{2*dim + 1}-grid")
     ax.legend()
-    fig.savefig(path + "/mean_pos_avoid.pdf")
+    if path != "":
+        fig.savefig(path + "/mean_pos_avoid.pdf")
 
     print(eff_runs)
 
@@ -92,7 +93,9 @@ def mean_sq_pos_stats(runs, dim, steps, path):
     ax.set_ylabel("Mean distance of walk from origin $d$")
     ax.set_title(f"Non-self-avoiding, {runs} runs, {2*dim + 1}x{2*dim + 1}-grid")
     ax.legend()
-    fig.savefig(path + "/mean_pos.pdf")
+
+    if path != "":
+        fig.savefig(path + "/mean_pos.pdf")
 
 
     return fig, ax, x2s, y2s
@@ -114,7 +117,10 @@ def mean_sq_pos_stats_both(runs, dim, steps, path):
     ax.set_title(f"{2*dim + 1}x{2*dim + 1}-grid")
     ax.legend()
 
-    fig.savefig(path + "/mean_pos_comp.pdf")
+    if path != "":
+        fig.savefig(path + "/mean_pos_comp.pdf")
+
+    return fig, ax, distance_r, distance_sa
 
 
 
