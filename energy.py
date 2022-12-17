@@ -276,10 +276,12 @@ def animated_monte_carlo(length, mc_steps, T, frame_interval, fps, path):
     
     
     anim = FuncAnimation(fig, anim_update, frames=num_frames, fargs=(frame_interval, fig, ax1, ax2, grids_vecs, ergs, length, T), interval=100, blit=False)
-    writer = PillowWriter(fps=fps)
-    anim.save(path+f"/anim_test.gif", writer=writer)
     
-    return
+    if path != "":
+        writer = PillowWriter(fps=fps)
+        anim.save(path+f"/anim_test.gif", writer=writer)
+    
+    return anim, fig, ax1, ax2, grids_vecs
 
 
 def anim_update(frame, frame_interval, fig, ax1, ax2, grids_vecs, ergs, length, T):
