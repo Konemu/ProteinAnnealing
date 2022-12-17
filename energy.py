@@ -229,7 +229,8 @@ def eigenvalue_statistics(runs, path):
     ax.set_ylim([0, 0.2])
     ax.set_title(f"{runs} runs")
 
-    fig.savefig(path)
+    if path != "": # empty path: don't save
+        fig.savefig(path)
 
 
     return fig, ax, eigenvalues, ev_mean, ev_std # return everything!!1!
