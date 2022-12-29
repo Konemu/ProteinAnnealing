@@ -85,7 +85,7 @@ def self_avoiding_step(dim, i, j, grid):
     cmp = 1
     k = 0
     for bool in step_truth_values:
-        if bool == True:
+        if bool is True:
             if rand == cmp:
                 step = k
                 break
@@ -108,11 +108,13 @@ def self_avoiding_step(dim, i, j, grid):
 
     return new_i, new_j
 
-# this function randomly chooses a valid direction to move for the random walk
-# edges are avoided, occupied spaces are NOT!
-# new coordinates are returned with returns of -1 signaling no free valid space
 @njit
 def random_step(dim, i, j, grid):
+    '''
+    this function randomly chooses a valid direction to move for the random walk
+    edges are avoided, occupied spaces are NOT!
+    new coordinates are returned with returns of -1 signaling no free valid space
+    '''
     step_truth_values = [False, False, False, False] # order: up, right, down, left!
     [x, y] = spatial_coord(i, j, dim) # transform i, j to grid coords
     new_i = -1 # initialize return
@@ -143,7 +145,7 @@ def random_step(dim, i, j, grid):
     cmp = 1
     k = 0
     for bool in step_truth_values:
-        if bool == True:
+        if bool is True:
             if rand == cmp:
                 step = k
                 break
@@ -167,24 +169,27 @@ def random_step(dim, i, j, grid):
     return new_i, new_j
 
 
-# this function generates a (2*dim + 1)x(2*dim + 1)-grid populated with a self avoiding random walk starting at the origin
-# where grid spaces contain the number associated with the amino acid at that coordinate
-#
-# a vector sequentially containing the coords and amino acid numbers is also generated to keep 
-# track of the order of the protein
-#
-# dim is the maximum length dimension such that x in [-dim, dim], y in [-dim, dim]!
-# steps is the amount of random walk steps to be taken
 @njit
 def self_avoiding_walk_protein(dim, steps):
+    '''
+    this function generates a (2*dim + 1)x(2*dim + 1)-grid populated with a self avoiding random walk starting
+    at the origin where grid spaces contain the number associated with the amino acid at that coordinate
+
+    a vector sequentially containing the coords and amino acid numbers is also generated to keep
+    track of the order of the protein
+
+    dim is the maximum length dimension such that x in [-dim, dim], y in [-dim, dim]!
+    steps is the amount of random walk steps to be taken
+    '''
+
     # init grid
     grid = np.zeros((2*dim+1, 2*dim+1), dtype=np.int32)
     # init vector, the coord(0, 0, 0, 0) object can be used later to check for validity!
     coord_vec = [coord(0, 0, 0, 0)] * steps
-    coord_vec = typed.List(coord_vec)             
-    
+    coord_vec = typed.List(coord_vec)
+
     # generate first amino acid at (0, 0)
-    coord_vec[0] = coord(0, 0, randint(1, 21), dim)             
+    coord_vec[0] = coord(0, 0, randint(1, 21), dim)
     grid[coord_vec[0].i][coord_vec[0].j] = coord_vec[0].amin
 
     # perform steps
@@ -193,34 +198,37 @@ def self_avoiding_walk_protein(dim, steps):
         curr_i = coord_vec[step-1].i
         curr_j = coord_vec[step-1].j
         new_i, new_j = self_avoiding_step(dim, curr_i, curr_j, grid)
-        if new_i == -1: # if no valid step available: stop            
+        if new_i == -1: # if no valid step available: stop
             break
         # create new random node at determined pos
         [new_x, new_y] = spatial_coord(new_i, new_j, dim)
         coord_vec[step] = coord(new_x, new_y, randint(1, 21), dim)
-        grid[new_i, new_j] = coord_vec[step].amin       
+        grid[new_i, new_j] = coord_vec[step].amin
 
     return grid, coord_vec
 
 
-# this function generates a (2*dim + 1)x(2*dim + 1)-grid populated with a self avoiding random walk starting at the origin
-# where grid spaces contain 1 (occupied) or 0 (unoccupied)
-#
-# a vector sequentially containing the coords is also generated to keep 
-# track of the order of the steps
-#
-# dim is the maximum length dimension such that x in [-dim, dim], y in [-dim, dim]!
-# steps is the amount of random walk steps to be taken
+
 @njit
 def self_avoiding_walk(dim, steps):
+    '''
+    this function generates a (2*dim + 1)x(2*dim + 1)-grid populated with a self avoiding random walk starting at the origin
+    where grid spaces contain 1 (occupied) or 0 (unoccupied)
+
+    a vector sequentially containing the coords is also generated to keep
+    track of the order of the steps
+
+    dim is the maximum length dimension such that x in [-dim, dim], y in [-dim, dim]!
+    steps is the amount of random walk steps to be taken
+    '''
     # init grid
     grid = np.zeros((2*dim+1, 2*dim+1), dtype=np.int32)
     # init vector, the coord(0, 0, 0, 0) object can be used later to check for validity!
-    coord_vec = [coord(0, 0, 0, 0)] * steps       
-    coord_vec = typed.List(coord_vec)       
-    
+    coord_vec = [coord(0, 0, 0, 0)] * steps
+    coord_vec = typed.List(coord_vec)
+
     # generate first node at (0, 0)
-    coord_vec[0] = coord(0, 0, 1, dim)             
+    coord_vec[0] = coord(0, 0, 1, dim)
     grid[coord_vec[0].i][coord_vec[0].j] = coord_vec[0].amin
 
     # perform steps
@@ -229,20 +237,20 @@ def self_avoiding_walk(dim, steps):
         curr_i = coord_vec[step-1].i
         curr_j = coord_vec[step-1].j
         new_i, new_j = self_avoiding_step(dim, curr_i, curr_j, grid)
-        if new_i == -1: # if no valid step available: stop            
+        if new_i == -1: # if no valid step available: stop
             break
         # create new random node at determined pos
         [new_x, new_y] = spatial_coord(new_i, new_j, dim)
         coord_vec[step] = coord(new_x, new_y, 1, dim)
-        grid[new_i, new_j] = coord_vec[step].amin       
+        grid[new_i, new_j] = coord_vec[step].amin
 
     return grid, coord_vec
 
 
-# this function generates a (2*dim + 1)x(2*dim + 1)-grid populated with a NON-self-avoiding 
+# this function generates a (2*dim + 1)x(2*dim + 1)-grid populated with a NON-self-avoiding
 # random walk starting at the origin where grid spaces contain 1 (occupied) or 0 (unoccupied)
 #
-# a vector sequentially containing the coords is also generated to keep 
+# a vector sequentially containing the coords is also generated to keep
 # track of the order of the steps
 #
 # dim is the maximum length dimension such that x in [-dim, dim], y in [-dim, dim]!
@@ -252,11 +260,11 @@ def random_walk(dim, steps):
     # init grid
     grid = np.zeros((2*dim+1, 2*dim+1), dtype=np.int32)
     # init vector, the coord(0, 0, 0, 0) object can be used later to check for validity!
-    coord_vec = [coord(0, 0, 0, 0)] * steps 
-    coord_vec = typed.List(coord_vec)             
-    
+    coord_vec = [coord(0, 0, 0, 0)] * steps
+    coord_vec = typed.List(coord_vec)
+
     # generate first node at (0, 0)
-    coord_vec[0] = coord(0, 0, 1, dim)             
+    coord_vec[0] = coord(0, 0, 1, dim)
     grid[coord_vec[0].i][coord_vec[0].j] = coord_vec[0].amin
 
     # perform steps
@@ -265,16 +273,19 @@ def random_walk(dim, steps):
         curr_i = coord_vec[step-1].i
         curr_j = coord_vec[step-1].j
         new_i, new_j = random_step(dim, curr_i, curr_j, grid)
-        if new_i == -1: # if no valid step available: stop            
+        if new_i == -1: # if no valid step available: stop
             break
         # create new random node at determined pos
         [new_x, new_y] = spatial_coord(new_i, new_j, dim)
         coord_vec[step] = coord(new_x, new_y, 1, dim)
-        grid[new_i, new_j] = coord_vec[step].amin       
+        grid[new_i, new_j] = coord_vec[step].amin
 
     return grid, coord_vec
 
 def plot_grid(coord_vec, dim, path):
+    '''
+    function plots probably.
+    '''
     fig, ax = plt.subplots()
     for i in range(len(coord_vec)):
         ax.add_artist(plt.Circle((coord_vec[i].x, coord_vec[i].y), 0.1, color = "black"))
@@ -290,6 +301,9 @@ def plot_grid(coord_vec, dim, path):
     return fig, ax
 
 def plot_protein(coord_vec, dim, path):
+    '''
+    plots protein probably
+    '''
     fig, ax = plt.subplots()
     for i in range(len(coord_vec)):
         if i > 0:
@@ -303,7 +317,7 @@ def plot_protein(coord_vec, dim, path):
     ax.set_xlabel("$x$")
     ax.set_ylabel("$y$")
     ax.set_aspect('equal')
-    fig.colorbar(ScalarMappable(norm = cols.Normalize(1, 20), cmap=cols.LinearSegmentedColormap.from_list("a", cmap, 20)), 
+    fig.colorbar(ScalarMappable(norm = cols.Normalize(1, 20), cmap=cols.LinearSegmentedColormap.from_list("a", cmap, 20)),
                                 ax=ax, label="Amino acid", ticks = [i for i in range(1, 21)])
     if path != "":
         fig.savefig(path)

@@ -7,12 +7,14 @@ import matplotlib.pyplot as plt
 import randomwalk
 
 
-# generate squared average positions for self-avoiding walk
-# note: walks may be discarded if they "curl up" prematurely!
-# another approach might be to let this run until runs is reached.
-# ^^^^ feel free to change!
 @njit(parallel=True)
 def sq_pos_stats_parallel_self_avoiding(runs, dim, steps):
+    '''
+    # generate squared average positions for self-avoiding walk
+    # note: walks may be discarded if they "curl up" prematurely!
+    # another approach might be to let this run until runs is reached.
+    # ^^^^ feel free to change!
+    '''
     x2s              = np.zeros(steps)
     y2s              = np.zeros(steps)
     eff_runs = runs # remove discarded runs
@@ -25,13 +27,16 @@ def sq_pos_stats_parallel_self_avoiding(runs, dim, steps):
         for i in range(steps):
             x2s[i] += coord_vec[i].x**2
             y2s[i] += coord_vec[i].y**2
-        
+
     return x2s/eff_runs, y2s/eff_runs, eff_runs # calculate mean correctly (divide by eff_runs)
 
 
-# generate squared average positions for random walk
+
 @njit(parallel=True)
 def sq_pos_stats_parallel(runs, dim, steps):
+    '''
+    generate squared average positions for random walk
+    '''
     x2s              = np.zeros(steps)
     y2s              = np.zeros(steps)
 
@@ -40,20 +45,23 @@ def sq_pos_stats_parallel(runs, dim, steps):
         for i in range(steps):
             x2s[i] += coord_vec[i].x**2
             y2s[i] += coord_vec[i].y**2
-        
+
     return x2s/runs, y2s/runs
 
 
 
-# at this time, this "only" plots the distance from the origin as a function
-# of time = step for a self-avoiding walk
-# feel free to add cool stuff if you have ideas
-#
-# runs: # of walks to generate including ones that will potentially be discarded
-# dim: max. x-coordinate
-# steps: length of walks to be generated
-# path: where to save the picture
+
 def mean_sq_pos_stats_self_avoiding(runs, dim, steps, path):
+    '''
+    at this time, this "only" plots the distance from the origin as a function
+    of time = step for a self-avoiding walk
+    feel free to add cool stuff if you have ideas
+
+    runs: # of walks to generate including ones that will potentially be discarded
+    dim: max. x-coordinate
+    steps: length of walks to be generated
+    path: where to save the picture
+    '''
     x2s, y2s, eff_runs = sq_pos_stats_parallel_self_avoiding(runs, dim, steps)
 
     distance = np.sqrt(x2s + y2s)
@@ -73,15 +81,17 @@ def mean_sq_pos_stats_self_avoiding(runs, dim, steps, path):
     return fig, ax, x2s, y2s, eff_runs
 
 
-# at this time, this "only" plots the distance from the origin as a function
-# of time = step for a random walk
-# feel free to add cool stuff if you have ideas
-#
-# runs: # of walks to generate
-# dim: max. x-coordinate
-# steps: length of walks to be generated
-# path: where to save the picture
 def mean_sq_pos_stats(runs, dim, steps, path):
+    '''
+    at this time, this "only" plots the distance from the origin as a function
+    of time = step for a random walk
+    feel free to add cool stuff if you have ideas
+
+    runs: # of walks to generate
+    dim: max. x-coordinate
+    steps: length of walks to be generated
+    path: where to save the picture
+    '''
     x2s, y2s = sq_pos_stats_parallel(runs, dim, steps)
 
     distance = np.sqrt(x2s + y2s)
