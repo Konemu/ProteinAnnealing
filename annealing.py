@@ -60,5 +60,45 @@ def annealing(length, mc_steps, path):
         fig.savefig(path+f"/annealing_energy_l_{length}_steps_{mc_steps}.pdf")
     plt.show()
 
-    return ergs, coord_vec
+def averaged_annealing(length, T_steps, num_at_T, T_i, T_f, path):
+    grid, coord_vec = randomwalk.self_avoiding_walk_protein(length, length)
+    while coord_vec[-1].x == 0: # discard the protein and re-generate if it doesn't have full length
+        grid, coord_vec = randomwalk.self_avoiding_walk_protein(length, length)
+    if path != "":
+        randomwalk.plot_protein(coord_vec, length/3, path+f"/protein_init_l_{length}_steps_{num_at_T*T_steps}_annealing.pdf") # plot initial state
+
+    J = energy.random_exchange_matrix()
+    
+    ergs = np.empty(T_steps, np.double)
+    d_ergs = np.empty(T_steps, np.double)
+
+    if T_f == 0:
+        T_f = 0.01
+    dT = (T_i - T_f)/T_steps
+    T = T_i
+
+    for i in range(T_steps):
+        ergs_at_T = np.empty(num_at_T, np.double)
+        for k in range(num_at_T):
+            grid, coord_vec = energy.monte_carlo_step(grid, coord_vec, J, T) # perform mc steps
+            ergs_at_T[k] = energy.total_erg_per_site(grid, coord_vec, J)
+        ergs[i] = np.mean(ergs_at_T)
+        d_ergs[i] = np.std(ergs_at_T)
+        T -= dT
+
+    if path != "":
+        randomwalk.plot_protein(coord_vec, length/3, path+f"/protein_final_l_{length}_steps_{num_at_T*T_steps}_annealing.pdf") # plot initial state
+    
+    Temps = np.linspace(T_i, T_f, T_steps)
+    fig, ax = plt.subplots()
+    ax.plot(Temps, ergs, label=f"$L={length}$")
+    ax.invert_xaxis()
+    ax.set_xlabel("Temperature $T$")
+    ax.set_ylabel("Total energy $E$")
+    ax.legend()
+    ax.set_title(f"{num_at_T*T_steps} monte carlo steps, $dT={dT}$, {num_at_T} steps per T")
+    if path != "":
+        fig.savefig(path+f"/annealing_energy_avg_{num_at_T}_l_{length}_steps_{num_at_T*T_steps}.pdf")
+
+    return ergs, grid, coord_vec, fig, ax
 
