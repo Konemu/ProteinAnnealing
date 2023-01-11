@@ -7,9 +7,9 @@ set_num_threads(8)
 
 # code
 import randomwalk
-import energy
 import randomwalk_statistics
-import a5
+import energy
+import annealing
 
 
 def main():
@@ -17,7 +17,7 @@ def main():
     #randomwalk_statistics.mean_sq_pos_stats_both(10000, 100, 100, "data")
     #energy.evolve_protein_plot_energy(100, 100000, 1, "data")
     #energy.animated_monte_carlo(50, 1000, 1, 1, 8, "data")
-    a5.annealing(20, 100000, "data")
+    annealing.annealing(30, 1000000, "data")
 
 if __name__=="__main__":
     main()

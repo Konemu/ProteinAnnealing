@@ -106,6 +106,7 @@ def mean_sq_pos_stats(runs, dim, steps, path):
 
     if path != "":
         fig.savefig(path + "/mean_pos.pdf")
+        plt.close(fig)
 
 
     return fig, ax, x2s, y2s
@@ -113,8 +114,8 @@ def mean_sq_pos_stats(runs, dim, steps, path):
 
 # like both of the above but combined.
 def mean_sq_pos_stats_both(runs, dim, steps, path):
-    fig1, ax1, x2s_r, y2s_r = mean_sq_pos_stats(runs, dim, steps, path)
-    fig2, ax2, x2s_sa, y2s_sa, eff_runs = mean_sq_pos_stats_self_avoiding(runs, dim, steps, path)
+    x2s_r, y2s_r = mean_sq_pos_stats(runs, dim, steps, path)[2:]
+    x2s_sa, y2s_sa, eff_runs = mean_sq_pos_stats_self_avoiding(runs, dim, steps, path)[2:]
     distance_r = np.sqrt(x2s_r + y2s_r)
     distance_sa = np.sqrt(x2s_sa + y2s_sa)
     step = np.array([i for i in range(1, steps + 1)])
@@ -129,6 +130,7 @@ def mean_sq_pos_stats_both(runs, dim, steps, path):
 
     if path != "":
         fig.savefig(path + "/mean_pos_comp.pdf")
+        plt.close(fig)
 
     return fig, ax, distance_r, distance_sa
 

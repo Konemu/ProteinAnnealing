@@ -102,7 +102,7 @@ def check_and_perform_fold(grid, coord_vec, J, T, m, i, j, delta_i, delta_j):
         new_grid[i+delta_i, j+delta_j] = grid[i, j]
         new_coord_vec = copy_coord_vec(coord_vec) # same spiel for the coordinate vector
         new_coord_vec[m].move_to_indices(i+delta_i, j+delta_j)
-        delta_E = +(local_erg(new_grid, new_coord_vec, m, J) - local_erg(grid, coord_vec, m, J)) # +- ???
+        delta_E = local_erg(new_grid, new_coord_vec, m, J) - local_erg(grid, coord_vec, m, J)
         if delta_E <= 0: # negative energy change: keep change
             return new_grid, new_coord_vec
         elif rand() < np.exp(-delta_E/T): # positive energy change: keep change only at a certain chance
@@ -256,7 +256,6 @@ def eigenvalue_statistics(runs, path):
 
     if path != "": # empty path: don't save
         fig.savefig(path)
-
 
     return fig, ax, eigenvalues, ev_mean, ev_std # return everything!!1!
 
