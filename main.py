@@ -17,7 +17,8 @@ def main():
     #randomwalk_statistics.mean_sq_pos_stats_both(10000, 100, 100, "data")
     #energy.evolve_protein_plot_energy(100, 100000, 1, "data")
     #energy.animated_monte_carlo(50, 1000, 1, 1, 8, "data")
-    annealing.annealing(30, 1000000, "data")
+    annealing.annealing(length = 20, T_init = 10,T_end = 1,
+                        DeltaT= 0.001, hash_same_temp = 2, path = "data")
 
 if __name__=="__main__":
     main()
