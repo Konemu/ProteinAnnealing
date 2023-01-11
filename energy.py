@@ -54,6 +54,7 @@ def evolve_protein_plot_energy(length, mc_steps, T, path, a5):
     if a5 == False:
         return fig, ax, ergs, grid, coord_vec
     else:
+        plt.close()
         return ergs, coord_vec
 
 
@@ -73,7 +74,7 @@ def evolve_protein_plot_energy_var_temp(length, mc_steps, T, path):
     if path != "":
         randomwalk.plot_protein(coord_vec, length/3, path+f"/protein_final_l_{length}_steps_{mc_steps}.pdf") # plot final state
 
-        return ergs, coord_vec
+    return ergs, coord_vec
 
 # Perform a mc step on the grid, coor_vec pair as explained on the exercise sheet at given temperature T.
 @njit

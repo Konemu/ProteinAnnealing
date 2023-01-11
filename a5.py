@@ -16,6 +16,7 @@ def annealing(length, mc_steps, path):
         For this the evolve_protein_plot_energy function in energy.py has been slightly 
         altered to adapt for this change of double <-> array. 
     '''
+    """
     Temps = np.asarray(np.linspace(1, 10, 100))
     Temps = Temps[::-1] # invert array
     
@@ -35,11 +36,11 @@ def annealing(length, mc_steps, path):
     for t in range(len(Temps)):
         for i in range(1,hashtag_same_temp):
             ergs, coord_vec = energy.evolve_protein_plot_energy(length=length, 
-                                mc_steps=mc_steps, T=Temps[t], path='', a5 = True) 
+                                mc_steps=mc_steps, T=Temps[t], path='', a5 = True)
+            print(Temps[t])
             for j in range(len(ergs)):
-                print(t)
                 ergs_save_mean[t][j] += ergs[j]/hashtag_same_temp
-
+    """
 
     # Erster Part der Aufgabe 5. Einfach ein Temp Plot des annealing
     Temps = np.asarray(np.linspace(1, 10, mc_steps))
@@ -55,10 +56,8 @@ def annealing(length, mc_steps, path):
     ax.legend()
     ax.set_title(f"{mc_steps} monte carlo steps")
     if path != "":
-        fig.savefig(path+f"/energy_l_{length}_steps_{mc_steps}.pdf")
+        fig.savefig(path+f"/annealing_energy_l_{length}_steps_{mc_steps}.pdf")
     plt.show()
 
     return ergs, coord_vec
 
-#für testzwecke
-annealing(20,1000,'')
