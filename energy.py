@@ -10,6 +10,7 @@ from copy import deepcopy
 
 # code
 import randomwalk
+import barrier
 
 # generate random exchange matrix elements with exp. value 3 and stddev 1/sqrt(2)
 @njit
@@ -50,6 +51,8 @@ def evolve_protein_plot_energy(length, mc_steps, T, path, a5):
     ax.set_title(f"{mc_steps} monte carlo steps")
     if path != "":
         fig.savefig(path+f"/energy_l_{length}_steps_{mc_steps}.pdf")
+
+    barrier.barrier(mc_steps, ergs)
 
     if a5 == False:
         return fig, ax, ergs, grid, coord_vec
