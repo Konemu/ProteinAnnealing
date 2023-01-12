@@ -91,14 +91,26 @@ def averaged_annealing(length, T_steps, num_at_T, T_i, T_f, path):
     
     Temps = np.linspace(T_i, T_f, T_steps)
     fig, ax = plt.subplots()
-    ax.plot(Temps, ergs, label=f"$L={length}$")
-    ax.invert_xaxis()
-    ax.set_xlabel("Temperature $T$")
-    ax.set_ylabel("Total energy $E$")
+    #ax.plot(Temps, ergs, label=f"$L={length}$")
+    ax.plot(np.asarray(range(T_steps)), ergs, label=f"$L={length}$")
+    ax.set_xlabel("T-Step")
+    ax.set_ylabel("Total energy per site $E/N$")
+    ax.semilogx()
     ax.legend()
+
+    ax2 = ax.secondary_xaxis("top", functions=(
+            lambda step : T_i - step*dT, lambda T : (T_i-T)/dT
+    ))
+    ax2.set_xlabel("Temperature $T$")
+    step_ticks = ax.get_xticks()
+    T_ticks = (T_i - step_ticks)/dT
+    ax2.set_xticks(T_ticks)
+
     ax.set_title(f"{num_at_T*T_steps} monte carlo steps, $dT={dT}$, {num_at_T} steps per T")
     if path != "":
         fig.savefig(path+f"/annealing_energy_avg_{num_at_T}_l_{length}_steps_{num_at_T*T_steps}.pdf")
 
-    return ergs, grid, coord_vec, fig, ax
+    return ergs, grid, coord_vec, fig, ax, ax2
 
+
+    
