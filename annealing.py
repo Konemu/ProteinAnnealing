@@ -21,7 +21,6 @@ def annealing(length, T_init, T_end, DeltaT, hash_same_temp, path):
         grid, coord_vec = randomwalk.self_avoiding_walk_protein(length, length)
     J = energy.random_exchange_matrix() # generate a random exchange matrix
     
-    
     T = T_init
 
     total_length = int((T_init-T_end)/DeltaT)
@@ -40,7 +39,14 @@ def annealing(length, T_init, T_end, DeltaT, hash_same_temp, path):
 
     fig, ax = plt.subplots()
     ax.plot(temps, ergs_save_temp)
+    ax.set_xlabel("Temperature $T$")
+    ax.set_ylabel("Total energy $E$")
     ax.invert_xaxis()
+
+    if path != "":
+        fig.savefig(path+f"/annealing_energy_l_{length}_steps_{DeltaT}.pdf")
+    plt.show()
+
     plt.show()
 
 
@@ -57,9 +63,8 @@ def annealing(length, T_init, T_end, DeltaT, hash_same_temp, path):
     # ax.set_ylabel("Total energy $E$")
     # ax.legend()
     # ax.set_title(f"{mc_steps} monte carlo steps")
-    # if path != "":
-    #     fig.savefig(path+f"/annealing_energy_l_{length}_steps_{mc_steps}.pdf")
-    # plt.show()
+
+    
 
     return ergs_save_temp, coord_vec
 

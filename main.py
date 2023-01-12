@@ -15,10 +15,10 @@ import annealing
 def main():
     #energy.eigenvalue_statistics(1000000, "data/eigenvalue_distribution.pdf")
     #randomwalk_statistics.mean_sq_pos_stats_both(10000, 100, 100, "data")
-    #energy.evolve_protein_plot_energy(100, 100000, 1, "data")
-    #energy.animated_monte_carlo(50, 1000, 1, 1, 8, "data")
-    annealing.annealing(length = 20, T_init = 10,T_end = 1,
-                        DeltaT= 0.001, hash_same_temp = 2, path = "data")
+    #energy.evolve_protein_plot_energy(100, 10000, 1, "figures", a5 = False)
+    #energy.animated_monte_carlo(50, 1000, 1, 1, 8, "figures")
+    annealing.annealing(length = 100, T_init = 10,T_end = 1,
+                       DeltaT= 0.01, hash_same_temp = 5, path = "figures")
 
 if __name__=="__main__":
     main()
