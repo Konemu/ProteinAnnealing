@@ -159,27 +159,27 @@ def given_interaction_matrix(length, T_steps, num_at_T, T_i, T_f, J,path):
 
 
     
-    # HEat FIG
+    # Heat FIG
     Temps = np.linspace(T_i, T_f, T_steps)
-    fig2, axc = plt.subplots()
+    figC, axC = plt.subplots()
     #ax.plot(Temps, ergs, label=f"$L={length}$")
-    axc.plot(np.asarray(range(T_steps)), heat, label=f"$L={length}$")
-    axc.set_xlabel("T-Step")
-    axc.set_ylabel("specific energy per site $C$")
-    axc.semilogx()
-    axc.legend()
+    axC.plot(np.asarray(range(T_steps)), heat, label=f"$L={length}$")
+    axC.set_xlabel("T-Step")
+    axC.set_ylabel("specific energy per site $C$")
+    axC.semilogx()
+    axC.legend()
 
-    ax3 = axc.secondary_xaxis("top", functions=(
+    axC2 = axC.secondary_xaxis("top", functions=(
             lambda step : T_i - step*dT, lambda T : (T_i-T)/dT
     ))
-    axc.set_xlabel("Temperature $T$")
-    step_ticks = ax.get_xticks()
+    axC2.set_xlabel("Temperature $T$")
+    step_ticks = axC.get_xticks()
     T_ticks = (T_i - step_ticks)/dT
-    axc.set_xticks(T_ticks)
+    axC2.set_xticks(T_ticks)
 
-    axc.set_title(f"{num_at_T*T_steps} monte carlo steps, $dT={dT}$, {num_at_T} steps per T")
+    axC.set_title(f"{num_at_T*T_steps} monte carlo steps, $dT={dT}$, {num_at_T} steps per T")
     if path != "":
-        fig2.savefig(path+f"/spec_heat_avg_{num_at_T}_l_{length}_steps_{num_at_T*T_steps}.pdf")
+        figC.savefig(path+f"/spec_heat_avg_{num_at_T}_l_{length}_steps_{num_at_T*T_steps}.pdf")
 
     # GEO FIG
     fig_geo, ax_geo = plt.subplots()
@@ -201,4 +201,4 @@ def given_interaction_matrix(length, T_steps, num_at_T, T_i, T_f, J,path):
     if path != "":
         fig.savefig(path+f"/geometric_distance_avg_{num_at_T}_l_{length}_steps_{num_at_T*T_steps}.pdf")
 
-    return ergs, grid, coord_vec, fig, ax, ax2, figPrev, axPrev, fig2, axc, ax3, fig_geo, ax_geo, ax2_geo
+    return ergs, grid, coord_vec, fig, ax, ax2, figPrev, axPrev, figC, axC, axC2, fig_geo, ax_geo, ax2_geo
