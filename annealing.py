@@ -65,7 +65,9 @@ def averaged_annealing(length, T_steps, num_at_T, T_i, T_f, path):
     while coord_vec[-1].x == 0: # discard the protein and re-generate if it doesn't have full length
         grid, coord_vec = randomwalk.self_avoiding_walk_protein(length, length)
     if path != "":
-        randomwalk.plot_protein(coord_vec, length/3, path+f"/protein_init_l_{length}_steps_{num_at_T*T_steps}_annealing.pdf") # plot initial state
+        figPrev, axPrev = randomwalk.plot_protein(coord_vec, length/3, path+f"/protein_init_l_{length}_steps_{num_at_T*T_steps}_annealing.pdf") # plot initial state
+    else:
+        figPrev, axPrev = randomwalk.plot_protein(coord_vec, length/3, "")
 
     J = energy.random_exchange_matrix()
     
@@ -120,12 +122,16 @@ def averaged_annealing(length, T_steps, num_at_T, T_i, T_f, path):
     if path != "":
         fig.savefig(path+f"/annealing_energy_avg_{num_at_T}_l_{length}_steps_{num_at_T*T_steps}.pdf")
 
+<<<<<<< HEAD
     fig_geo, ax_geo = plt.subplots()
     ax_geo.plot(np.asarray(range(T_steps)), geo_distance, label=f"$L={length}$")
     ax_geo.set_xlabel("T-Step")
     ax_geo.set_ylabel("Euclidean distance between first and last amino acid")
     ax_geo.semilogx()
     ax_geo.legend()
+=======
+    return ergs, grid, coord_vec, fig, ax, ax2, figPrev, axPrev
+>>>>>>> 3df0cdbc9d7cee241933bb172eab0a8950b3cf84
 
     ax2_geo = ax_geo.secondary_xaxis("top", functions=(
             lambda step : T_i - step*dT, lambda T : (T_i-T)/dT
