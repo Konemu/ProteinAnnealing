@@ -58,7 +58,7 @@ def averaged_annealing(length, T_steps, num_at_T, T_i, T_f, path):
         d_ergs[i] = np.std(ergs_at_T)
 
         geo_dist[i] = np.mean(geo_at_T)
-        d_ergs[i] = np.std(geo_at_T)
+        d_geo_dist[i] = np.std(geo_at_T)
 
         T -= dT
 
@@ -72,45 +72,33 @@ def averaged_annealing(length, T_steps, num_at_T, T_i, T_f, path):
     # plot mean energy over temperature
     fig, ax = plt.subplots()
     ax.plot(np.asarray(range(T_steps)), ergs, label=f"$L={length}$")
+    # ax.fill_between(np.asarray(range(T_steps)), ergs-d_ergs, ergs+d_ergs,
+                    # alpha=0.5)
     ax.set_xlabel("T-Step")
     ax.set_ylabel("Total energy per site $E/N$")
     ax.semilogx()
     ax.legend()
 
-    ax2 = ax.secondary_xaxis("top", functions=(
-            lambda step: T_i - step*dT, lambda T: (T_i-T)/dT
-    ))
-    ax2.set_xlabel("Temperature $T$")
-    step_ticks = ax.get_xticks()
-    T_ticks = (T_i - step_ticks)/dT
-    ax2.set_xticks(T_ticks)
-
     ax.set_title(f"{num_at_T*T_steps} monte carlo steps, $dT={dT}$, " +
                  "{num_at_T} steps per T")
     if path != "":
-        fig.savefig(path+f"/annealing_energy_avg_{num_at_T}_l_{length}_" +
-                    "steps_{num_at_T*T_steps}.pdf")
+        fig.savefig(path+f"/annealing_energy_avg_{num_at_T}_l_{length}_steps" +
+                    f"_{num_at_T*T_steps}.pdf")
 
     # plot mean eucledian distance over temperature
     fig_geo, ax_geo = plt.subplots()
     ax_geo.plot(np.asarray(range(T_steps)), geo_dist, label=f"$L={length}$")
+    # ax_geo.fill_between(np.asarray(range(T_steps)), geo_dist-d_geo_dist,
+                        # geo_dist+d_geo_dist, alpha=0.5)
     ax_geo.set_xlabel("T-Step")
     ax_geo.set_ylabel("Euclidean distance between first and last amino acid")
     ax_geo.semilogx()
     ax_geo.legend()
 
-    ax2_geo = ax_geo.secondary_xaxis("top", functions=(
-            lambda step: T_i - step*dT, lambda T: (T_i-T)/dT
-    ))
-    ax2_geo.set_xlabel("Temperature $T$")
-    step_ticks = ax_geo.get_xticks()
-    T_ticks = (T_i - step_ticks)/dT
-    ax2_geo.set_xticks(T_ticks)
-
     ax.set_title(f"{num_at_T*T_steps} monte carlo steps, $dT={dT}$, " +
-                 "{num_at_T} steps per T")
+                 f"{num_at_T} steps per T")
     if path != "":
         fig.savefig(path+f"/geometric_distance_avg_{num_at_T}_l_{length}_" +
-                    "steps_{num_at_T*T_steps}.pdf")
+                    f"steps_{num_at_T*T_steps}.pdf")
 
-    return ergs, grid, coord_vec, fig, ax, ax2, geo_dist, fig_geo, ax_geo, ax2_geo, figPrev, axPrev
+    return ergs, grid, coord_vec, fig, ax, geo_dist, fig_geo, ax_geo, figPrev, axPrev
