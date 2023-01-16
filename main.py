@@ -10,6 +10,7 @@ import randomwalk
 import randomwalk_statistics
 import energy
 import annealing
+import interaction
 
 
 def main():
