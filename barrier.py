@@ -11,12 +11,10 @@ import numpy as np
 
 def barrier(mc_steps, ergs):
     """
-    Return array containing all energy barriers for the meta-stable energy
-    states in relation to the first state. Therefore all relations between
-    different states can be calculated from this array.
-    Calculating with positve energies, turning them negative at the end
+    Return array containing all meta-stabel energies (initial energy included)
+    for a given evolved protein over the number of monte-carlo-steps / time.
     """
-    barrier_array = np.array([abs(ergs[0])])
+    barrier_array = np.array([ergs[0]])
     barrier = 0
 
     for i in range(1, mc_steps):
@@ -28,15 +26,10 @@ def barrier(mc_steps, ergs):
             # prüfe ob zustand bereits in array vorhanden
             if abs(barrier_array[0] - ergs[i]) not in barrier_array:
                 barrier_array = np.append(
-                    barrier_array, abs(barrier_array[0] - ergs[i]))
+                    barrier_array, ergs[i-1])
 
             barrier = 0
 
     print("Test", barrier_array)
 
-    return np.negative(barrier_array)
-
-"""
-Anmerkung: Ich glaube so wird aktuell immer der erste Zustand verpasst, das
-müsste noch überarbeitet werden
-"""
+    return barrier_array
