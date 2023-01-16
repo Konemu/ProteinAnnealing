@@ -11,25 +11,24 @@ import numpy as np
 
 def barrier(mc_steps, ergs):
     """
-    Return array containing all meta-stabel energies (initial energy included)
-    for a given evolved protein over the number of monte-carlo-steps / time.
+    Returns array containing all energy barriers
     """
-    barrier_array = np.array([ergs[0]])
+    meta_stable_array = np.array([ergs[0]])
+    barrier_array = np.array([])
     barrier = 0
 
     for i in range(1, mc_steps):
+        if ergs[i] == ergs[i-1] and ergs[i] not in meta_stable_array:
+            meta_stable_array = np.append(meta_stable_array, ergs[i])
 
-        if ergs[i] - ergs[i-1] > 0:
-            barrier += ergs[i] - ergs[i-1]
+    for i in range(1, len(meta_stable_array)):
+        if meta_stable_array[i] > meta_stable_array[i-1]:
+            barrier += abs(meta_stable_array[i] - meta_stable_array[i-1])
 
-        elif barrier > 0 and ergs[i] - ergs[i-1] < 0:
-            # prüfe ob zustand bereits in array vorhanden
-            if abs(barrier_array[0] - ergs[i]) not in barrier_array:
-                barrier_array = np.append(
-                    barrier_array, ergs[i-1])
-
+        elif meta_stable_array[i] < meta_stable_array[i-1] and barrier != 0:
+            barrier_array = np.append(barrier_array, barrier)
             barrier = 0
 
-    print("Test", barrier_array)
+    print("Energiebarrieren:", barrier_array)
 
     return barrier_array
