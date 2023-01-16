@@ -75,8 +75,10 @@ def mean_sq_pos_stats_self_avoiding(runs, dim, steps, path):
     ax.legend()
     if path != "":
         fig.savefig(path + "/mean_pos_avoid.pdf")
+    else:
+        plt.close(fig)
 
-    print(eff_runs)
+    #print(eff_runs)
 
     return fig, ax, x2s, y2s, eff_runs
 
@@ -106,6 +108,7 @@ def mean_sq_pos_stats(runs, dim, steps, path):
 
     if path != "":
         fig.savefig(path + "/mean_pos.pdf")
+    else:
         plt.close(fig)
 
 
@@ -130,7 +133,7 @@ def mean_sq_pos_stats_both(runs, dim, steps, path):
 
     if path != "":
         fig.savefig(path + "/mean_pos_comp.pdf")
-        plt.close(fig)
+    
 
     return fig, ax, distance_r, distance_sa
 
