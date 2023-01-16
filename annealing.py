@@ -80,7 +80,7 @@ def averaged_annealing(length, T_steps, num_at_T, T_i, T_f, path):
     ax.legend()
 
     ax.set_title(f"{num_at_T*T_steps} monte carlo steps, $dT={dT}$, " +
-                 "{num_at_T} steps per T")
+                 f"{num_at_T} steps per T")
     if path != "":
         fig.savefig(path+f"/annealing_energy_avg_{num_at_T}_l_{length}_steps" +
                     f"_{num_at_T*T_steps}.pdf")
