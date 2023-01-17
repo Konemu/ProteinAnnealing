@@ -105,6 +105,7 @@ def check_and_perform_fold(grid, coord_vec, J, T, m, i, j, delta_i, delta_j):
         new_coord_vec = copy_coord_vec(coord_vec) # same spiel for the coordinate vector
         new_coord_vec[m].move_to_indices(i+delta_i, j+delta_j)
         delta_E = local_erg(new_grid, new_coord_vec, m, J) - local_erg(grid, coord_vec, m, J)
+        #delta_E = (total_erg_per_site(new_grid, new_coord_vec, J) - total_erg_per_site(grid, coord_vec, J))*len(coord_vec)
         if delta_E <= 0: # negative energy change: keep change
             return new_grid, new_coord_vec
         elif rand() < np.exp(-delta_E/T): # positive energy change: keep change only at a certain chance
@@ -305,7 +306,7 @@ def animated_monte_carlo(length, mc_steps, T, frame_interval, fps, path):
 
     if path != "":
         writer = PillowWriter(fps=fps)
-        anim.save(path+f"/anim_test.gif", writer=writer)
+        anim.save(path+f"/anim_test_length_{length}_steps_{mc_steps}_T_{T}.gif", writer=writer)
 
     return anim, fig, ax1, ax2, grids_vecs
 
