@@ -20,7 +20,7 @@ def main():
     #energy.animated_monte_carlo(30, 100000, 1000, 1000, 5, "data")
     #annealing.annealing(30, 1000000, "data")
     #annealing.averaged_annealing(30, 100, 10, 10, 0.01, "data")
-    annealing.annealing_multiple_runs(30, 100, 1000, 20, 10, 1, "data")
+    annealing.annealing_multiple_runs(30, 100, 10000, 100, 10, 1, "data")
 
 if __name__=="__main__":
     main()

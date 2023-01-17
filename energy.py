@@ -48,7 +48,7 @@ def evolve_protein_plot_energy(length, mc_steps, T, path):
     fig, ax = plt.subplots()
     ax.plot(np.asarray(range(mc_steps)), ergs, label=f"$L={length}$") # plot energy
     ax.set_xlabel("Time step $t$")
-    ax.set_ylabel("Total energy $E$")
+    ax.set_ylabel("Total energy per site $E/L$")
     ax.legend()
     ax.set_title(f"{mc_steps} monte carlo steps")
     if path != "":
@@ -273,7 +273,7 @@ def animated_monte_carlo(length, mc_steps, T, frame_interval, fps, path):
 
     print("MC done, saving gif. This may take a while.")
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(30, 15))
+    fig, (ax1, ax2) = plt.subplots(1, 2)
     for i in range(len(grids_vecs[0][1])):
         if i > 0:
             ax1.plot([grids_vecs[0][1][i].x, grids_vecs[0][1][i-1].x], [grids_vecs[0][1][i].y, grids_vecs[0][1][i-1].y], color="black")
@@ -288,10 +288,11 @@ def animated_monte_carlo(length, mc_steps, T, frame_interval, fps, path):
     ax1.set_ylabel("$y$")
     ax1.set_aspect('equal')
     ax2.set_xlabel("Time step $t$")
-    ax2.set_ylabel("Total energy $E$")
+    ax2.set_ylabel("Total energy per site $E/L$")
     ax2.set_title(f"{mc_steps} monte carlo steps")
     fig.colorbar(ScalarMappable(norm = cols.Normalize(1, 20), cmap=cols.LinearSegmentedColormap.from_list("a", randomwalk.cmap, 20)),
                                 ax=ax1, label="Amino acid")
+    fig.set_dpi(150)
     fig.tight_layout()
 
 

@@ -60,6 +60,10 @@ def annealing_multiple_runs(length, T_steps, num_at_T, runs, T_i, T_f, path):
     ax.set_ylabel("Total delta energy per site $\\Delta E/N$")
     ax.semilogx()
     ax.legend()
+    ax2 = ax.secondary_xaxis("top", functions=(
+            lambda step : T_i - step*dT, lambda T : (T_i-T)/dT
+    ))
+    ax2.set_xlabel("Temperature $T$")
 
     ax.set_title(f"{num_at_T*T_steps} monte carlo steps, $dT={dT}$, " +
                  f"{num_at_T} steps per T, {runs} realisations")
@@ -76,6 +80,10 @@ def annealing_multiple_runs(length, T_steps, num_at_T, runs, T_i, T_f, path):
     ax_geo.set_ylabel("Euclidean distance between first and last amino acid")
     ax_geo.semilogx()
     ax_geo.legend()
+    ax_geo2 = ax_geo.secondary_xaxis("top", functions=(
+            lambda step : T_i - step*dT, lambda T : (T_i-T)/dT
+    ))
+    ax_geo2.set_xlabel("Temperature $T$")
 
     ax.set_title(f"{num_at_T*T_steps} monte carlo steps, $dT={dT}$, " +
                  f"{num_at_T} steps per T, {runs} realisations")
@@ -83,7 +91,7 @@ def annealing_multiple_runs(length, T_steps, num_at_T, runs, T_i, T_f, path):
         fig_geo.savefig(path+f"/geometric_distance_avg_{num_at_T}_l_{length}_" +
                     f"steps_{num_at_T*T_steps}_{runs}_runs.pdf")
 
-    return delta_ergs_avg, geo_dist_avg, fig, ax, fig_geo, ax_geo
+    return delta_ergs_avg, geo_dist_avg, fig, ax, ax2, fig_geo, ax_geo, ax_geo2
 
 
 def averaged_annealing(length, T_steps, num_at_T, T_i, T_f, path):
@@ -155,8 +163,11 @@ def averaged_annealing(length, T_steps, num_at_T, T_i, T_f, path):
                     # alpha=0.5)
     ax.set_xlabel("T-Step")
     ax.set_ylabel("Total energy per site $E/N$")
-    #ax.semilogx()
     ax.legend()
+    ax2 = ax.secondary_xaxis("top", functions=(
+            lambda step : T_i - step*dT, lambda T : (T_i-T)/dT
+    ))
+    ax2.set_xlabel("Temperature $T$")
 
     ax.set_title(f"{num_at_T*T_steps} monte carlo steps, $dT={dT}$, " +
                  f"{num_at_T} steps per T")
@@ -173,6 +184,10 @@ def averaged_annealing(length, T_steps, num_at_T, T_i, T_f, path):
     ax_geo.set_ylabel("Euclidean distance between first and last amino acid")
     #ax_geo.semilogx()
     ax_geo.legend()
+    ax2geo = ax_geo.secondary_xaxis("top", functions=(
+            lambda step : T_i - step*dT, lambda T : (T_i-T)/dT
+    ))
+    ax2geo.set_xlabel("Temperature $T$")
 
     ax.set_title(f"{num_at_T*T_steps} monte carlo steps, $dT={dT}$, " +
                  f"{num_at_T} steps per T")
@@ -180,4 +195,4 @@ def averaged_annealing(length, T_steps, num_at_T, T_i, T_f, path):
         fig_geo.savefig(path+f"/geometric_distance_avg_{num_at_T}_l_{length}_" +
                     f"steps_{num_at_T*T_steps}.pdf")
 
-    return ergs, grid, coord_vec, fig, ax, geo_dist, fig_geo, ax_geo, figPrev, axPrev
+    return ergs, grid, coord_vec, fig, ax, ax2, geo_dist, fig_geo, ax_geo, ax2geo, figPrev, axPrev
