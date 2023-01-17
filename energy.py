@@ -54,29 +54,10 @@ def evolve_protein_plot_energy(length, mc_steps, T, path):
     if path != "":
         fig.savefig(path+f"/energy_l_{length}_steps_{mc_steps}.pdf")
 
+    print("Barriers:")
     barrier.barrier(mc_steps, ergs)
 
     return fig, ax, ergs, grid, coord_vec, figPrev, axPrev
-
-
-
-#   geklonte Fkt von oben.
-def evolve_protein_plot_energy_var_temp(length, mc_steps, T, path):
-    grid, coord_vec = randomwalk.self_avoiding_walk_protein(length, length)
-    while coord_vec[-1].x == 0: # discard the protein and re-generate if it doesn't have full length
-        grid, coord_vec = randomwalk.self_avoiding_walk_protein(length, length)
-    if path != "":
-        randomwalk.plot_protein(coord_vec, length/3, path+f"/protein_init_l_{length}_steps_{mc_steps}.pdf") # plot initial state
-
-    J = random_exchange_matrix() # generate a random exchange matrix
-    ergs = np.empty(mc_steps, dtype=np.double) # save energy at each step
-    for k in range(mc_steps):
-        grid, coord_vec = monte_carlo_step(grid, coord_vec, J, T[k]) # perform mc steps
-        ergs[k] = total_erg_per_site(grid, coord_vec, J)
-    if path != "":
-        randomwalk.plot_protein(coord_vec, length/3, path+f"/protein_final_l_{length}_steps_{mc_steps}.pdf") # plot final state
-
-    return ergs, coord_vec
 
 # Perform a mc step on the grid, coor_vec pair as explained on the exercise sheet at given temperature T.
 @njit
