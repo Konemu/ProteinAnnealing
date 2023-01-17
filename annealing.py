@@ -155,7 +155,7 @@ def averaged_annealing(length, T_steps, num_at_T, T_i, T_f, path):
                     # alpha=0.5)
     ax.set_xlabel("T-Step")
     ax.set_ylabel("Total energy per site $E/N$")
-    ax.semilogx()
+    #ax.semilogx()
     ax.legend()
 
     ax.set_title(f"{num_at_T*T_steps} monte carlo steps, $dT={dT}$, " +
@@ -171,7 +171,7 @@ def averaged_annealing(length, T_steps, num_at_T, T_i, T_f, path):
                         # geo_dist+d_geo_dist, alpha=0.5)
     ax_geo.set_xlabel("T-Step")
     ax_geo.set_ylabel("Euclidean distance between first and last amino acid")
-    ax_geo.semilogx()
+    #ax_geo.semilogx()
     ax_geo.legend()
 
     ax.set_title(f"{num_at_T*T_steps} monte carlo steps, $dT={dT}$, " +

@@ -66,11 +66,23 @@ def monte_carlo_step(grid, coord_vec, J, T):
     m = randint(0, protein_length) # select random peptide
     i, j = coord_vec[m].i, coord_vec[m].j # grid coords of the selected peptide
 
+    #print(m) # TODO rm
+    #print(  check_fold_validity(grid, coord_vec, m, i, j, 1, 1), 
+    #        check_fold_validity(grid, coord_vec, m, i, j, 1, -1),
+    #        check_fold_validity(grid, coord_vec, m, i, j, -1, 1),
+    #        check_fold_validity(grid, coord_vec, m, i, j, -1, -1))
+    
+    foldlist = [1,1], [1, -1], [-1, 1], [-1,-1]
+
     # check the validity of all theoretically possible folds and perform the valid one (depending on delta E, see below)
-    new_grid, new_coord_vec = check_and_perform_fold(grid, coord_vec, J, T, m, i, j,  1,  1) # up-right
-    new_grid, new_coord_vec = check_and_perform_fold(grid, coord_vec, J, T, m, i, j,  1, -1) # down-right
-    new_grid, new_coord_vec = check_and_perform_fold(grid, coord_vec, J, T, m, i, j, -1,  1) # up-left
-    new_grid, new_coord_vec = check_and_perform_fold(grid, coord_vec, J, T, m, i, j, -1, -1) # down-left
+    if m == 0 or m == protein_length-1:
+        for foldindex in np.random.permutation(4): # don't prefer a direction -> shuffle
+            new_grid, new_coord_vec, bool = check_and_perform_fold(grid, coord_vec, J, T, m, i, j,  foldlist[foldindex][0],  foldlist[foldindex][1]) 
+            if bool:
+                break
+    else:
+        for fold in foldlist:
+            new_grid, new_coord_vec, bool = check_and_perform_fold(grid, coord_vec, J, T, m, i, j,  fold[0],  fold[1]) 
 
     return new_grid, new_coord_vec
 
@@ -87,12 +99,12 @@ def check_and_perform_fold(grid, coord_vec, J, T, m, i, j, delta_i, delta_j):
         new_coord_vec[m].move_to_indices(i+delta_i, j+delta_j)
         delta_E = local_erg(new_grid, new_coord_vec, m, J) - local_erg(grid, coord_vec, m, J)
         #delta_E = (total_erg_per_site(new_grid, new_coord_vec, J) - total_erg_per_site(grid, coord_vec, J))*len(coord_vec)
-        if delta_E <= 0: # negative energy change: keep change
-            return new_grid, new_coord_vec
+        if delta_E <= 1e-10: # negative energy change: keep change
+            return new_grid, new_coord_vec, True
         elif rand() < np.exp(-delta_E/T): # positive energy change: keep change only at a certain chance
-            return new_grid, new_coord_vec
+            return new_grid, new_coord_vec, True
 
-    return grid, coord_vec
+    return grid, coord_vec, False
 
 
 # this does pretty much exactly what it says
