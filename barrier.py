@@ -15,6 +15,7 @@ def barrier(mc_steps, ergs):
     """
     meta_stable_array = np.array([ergs[0]])
     barrier_array = np.array([])
+    index_of_barrier = []
     barrier = 0
 
     for i in range(1, mc_steps):
@@ -27,7 +28,13 @@ def barrier(mc_steps, ergs):
 
         elif meta_stable_array[i] < meta_stable_array[i-1] and barrier != 0:
             barrier_array = np.append(barrier_array, barrier)
+            index_of_barrier.append(i)
             barrier = 0
+
+    for i in range(1, mc_steps):
+        if len(index_of_barrier)>0 and ergs[i] == meta_stable_array[index_of_barrier[0]]:
+            print('MC Schritte bis zur ersten Barriere: ' + str(i))
+        break
 
     print("Energiebarrieren:", barrier_array)
 
