@@ -5,6 +5,10 @@ from numba import set_num_threads
 # something goes wrong
 set_num_threads(4)
 
+LEN_PROTEINS = 30
+NUM_MC_STEPS = int(2e3)
+MC_TEMP = 1
+
 # code
 import randomwalk
 import randomwalk_statistics
@@ -14,13 +18,14 @@ import interaction
 
 
 def main():
-    # energy.eigenvalue_statistics(1000, "data/eigenvalue_distribution.pdf")
+    fig, ax, ergs, grid, coord_vec, figPrev, axPrev = energy.evolve_protein_plot_energy(length=LEN_PROTEINS, mc_steps=NUM_MC_STEPS, T=MC_TEMP, path="")
+    #energy.eigenvalue_statistics(1000, "figures/eigenvalue_distribution.pdf")
     # randomwalk_statistics.mean_sq_pos_stats_both(1000, 100, 100, "data")
     # energy.evolve_protein_plot_energy(30, 1000, 1, "data", False)
     #energy.animated_monte_carlo(30, 100000, 1000, 1000, 5, "data")
     #annealing.annealing(30, 1000000, "data")
     #annealing.averaged_annealing(30, 100, 10, 10, 0.01, "data")
-    annealing.annealing_multiple_runs(30, 100, 10000, 100, 10, 1, "data")
+    #annealing.annealing_multiple_runs(30, 100, 10000, 100, 10, 1, "data")
 
 if __name__=="__main__":
     main()
