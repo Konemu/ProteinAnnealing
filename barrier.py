@@ -18,6 +18,8 @@ def barrier(mc_steps, ergs):
     index_of_barrier = []
     barrier = 0
 
+    print('hi')
+
     for i in range(1, mc_steps):
         if ergs[i] == ergs[i-1] and ergs[i] not in meta_stable_array:
             meta_stable_array = np.append(meta_stable_array, ergs[i])
@@ -28,7 +30,8 @@ def barrier(mc_steps, ergs):
 
         elif meta_stable_array[i] < meta_stable_array[i-1] and barrier != 0:
             barrier_array = np.append(barrier_array, barrier)
-            index_of_barrier.append(i)
+            index_of_barrier.append(i)  
+            print(index_of_barrier)
             barrier = 0
 
     for i in range(1, mc_steps):
