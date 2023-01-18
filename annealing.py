@@ -58,7 +58,6 @@ def annealing_multiple_runs(length, T_steps, num_at_T, runs, T_i, T_f, path):
                     # alpha=0.5)
     ax.set_xlabel("T-Step")
     ax.set_ylabel("Total delta energy per site $\\Delta E/N$")
-    ax.semilogx()
     ax.legend()
     ax2 = ax.secondary_xaxis("top", functions=(
             lambda step : T_i - step*dT, lambda T : (T_i-T)/dT
@@ -78,7 +77,6 @@ def annealing_multiple_runs(length, T_steps, num_at_T, runs, T_i, T_f, path):
                         # geo_dist+d_geo_dist, alpha=0.5)
     ax_geo.set_xlabel("T-Step")
     ax_geo.set_ylabel("Euclidean distance between first and last amino acid")
-    ax_geo.semilogx()
     ax_geo.legend()
     ax_geo2 = ax_geo.secondary_xaxis("top", functions=(
             lambda step : T_i - step*dT, lambda T : (T_i-T)/dT

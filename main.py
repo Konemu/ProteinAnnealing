@@ -18,7 +18,7 @@ import interaction
 
 
 def main():
-    fig, ax, ergs, grid, coord_vec, figPrev, axPrev = energy.evolve_protein_plot_energy(length=LEN_PROTEINS, mc_steps=NUM_MC_STEPS, T=MC_TEMP, path="")
+    energy.evolve_protein_plot_energy(length=LEN_PROTEINS, mc_steps=NUM_MC_STEPS, T=MC_TEMP, path="")
     #energy.eigenvalue_statistics(1000, "figures/eigenvalue_distribution.pdf")
     # randomwalk_statistics.mean_sq_pos_stats_both(1000, 100, 100, "data")
     # energy.evolve_protein_plot_energy(30, 1000, 1, "data", False)

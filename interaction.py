@@ -2,13 +2,14 @@
 
 # libs
 import numpy as np
-from numba import njit, prange
+from numba import njit
 import matplotlib.pyplot as plt
+
 
 # code
 import randomwalk
 import energy
-import randomwalk_statistics
+import barrier
 
 @njit
 def local_quadr_erg(grid, coord_vec, m, J):
@@ -102,7 +103,7 @@ def given_interaction_matrix(length, T_steps, num_at_T, T_i, T_f, J,path):
     else:
         figPrev, axPrev = randomwalk.plot_protein(coord_vec, length/3, "")
     
-
+    fullergs = np.empty(T_steps*num_at_T, np.double)
     ergs = np.empty(T_steps, np.double)
     d_ergs = np.empty(T_steps, np.double)
     heat = np.empty(T_steps, np.double)
@@ -130,6 +131,7 @@ def given_interaction_matrix(length, T_steps, num_at_T, T_i, T_f, J,path):
         d_ergs[i] = np.std(ergs_at_T)
         heat[i] = np.mean(heat_at_T)
         geo_distance[i] = np.mean(geo_at_T)
+        fullergs[i*num_at_T:(i+1)*num_at_T] = ergs_at_T
         T -= dT
 
     if path != "":
@@ -158,8 +160,9 @@ def given_interaction_matrix(length, T_steps, num_at_T, T_i, T_f, J,path):
     figC, axC = plt.subplots()
     #ax.plot(Temps, ergs, label=f"$L={length}$")
     axC.plot(np.asarray(range(T_steps)), heat, label=f"$L={length}$")
+    axC.semilogy()
     axC.set_xlabel("T-Step")
-    axC.set_ylabel("specific energy per site $C$")
+    axC.set_ylabel("Specific heat per site $C$")
     axC.legend()
 
     axC2 = axC.secondary_xaxis("top", functions=(
@@ -188,3 +191,20 @@ def given_interaction_matrix(length, T_steps, num_at_T, T_i, T_f, J,path):
         fig.savefig(path+f"/geometric_distance_avg_{num_at_T}_l_{length}_steps_{num_at_T*T_steps}.pdf")
 
     return ergs, grid, coord_vec, fig, ax, ax2, figPrev, axPrev, figC, axC, axC2, fig_geo, ax_geo, ax2_geo
+
+
+def time_to_metastable(length, mc_steps, T, J, runs):
+    times = []
+
+    for run in range(runs):    
+        fig, ax, ergs, grid, coord_vec, figPrev, axPrev = energy.evolve_protein_plot_energy_given_J(length, mc_steps, T, J, "")
+        plt.close(fig)
+        plt.close(figPrev)
+        step_first_metastable = barrier.time_to_metastable(ergs)
+        if step_first_metastable != -1:
+            times.append(step_first_metastable)
+    
+    time = np.mean(times)
+    dtime = np.std(times)/np.sqrt(len(times))
+
+    return time, dtime
