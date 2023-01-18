@@ -142,22 +142,16 @@ def given_interaction_matrix(length, T_steps, num_at_T, T_i, T_f, J,path):
     ax.plot(np.asarray(range(T_steps)), ergs, label=f"$L={length}$")
     ax.set_xlabel("T-Step")
     ax.set_ylabel("Total energy per site $E/N$")
-    ax.semilogx()
     ax.legend()
 
     ax2 = ax.secondary_xaxis("top", functions=(
             lambda step : T_i - step*dT, lambda T : (T_i-T)/dT
     ))
     ax2.set_xlabel("Temperature $T$")
-    step_ticks = ax.get_xticks()
-    T_ticks = (T_i - step_ticks)/dT
-    ax2.set_xticks(T_ticks)
 
     ax.set_title(f"{num_at_T*T_steps} monte carlo steps, $dT={dT}$, {num_at_T} steps per T, $J_{'ij'} = -3$")
     if path != "":
         fig.savefig(path+f"/given_J_avg_{num_at_T}_l_{length}_steps_{num_at_T*T_steps}.pdf")
-
-
     
     # Heat FIG
     Temps = np.linspace(T_i, T_f, T_steps)
@@ -166,16 +160,12 @@ def given_interaction_matrix(length, T_steps, num_at_T, T_i, T_f, J,path):
     axC.plot(np.asarray(range(T_steps)), heat, label=f"$L={length}$")
     axC.set_xlabel("T-Step")
     axC.set_ylabel("specific energy per site $C$")
-    axC.semilogx()
     axC.legend()
 
     axC2 = axC.secondary_xaxis("top", functions=(
             lambda step : T_i - step*dT, lambda T : (T_i-T)/dT
     ))
     axC2.set_xlabel("Temperature $T$")
-    step_ticks = axC.get_xticks()
-    T_ticks = (T_i - step_ticks)/dT
-    axC2.set_xticks(T_ticks)
 
     axC.set_title(f"{num_at_T*T_steps} monte carlo steps, $dT={dT}$, {num_at_T} steps per T")
     if path != "":
@@ -186,16 +176,12 @@ def given_interaction_matrix(length, T_steps, num_at_T, T_i, T_f, J,path):
     ax_geo.plot(np.asarray(range(T_steps)), geo_distance, label=f"$L={length}$")
     ax_geo.set_xlabel("T-Step")
     ax_geo.set_ylabel("Euclidean distance between first and last amino acid")
-    ax_geo.semilogx()
     ax_geo.legend()
 
     ax2_geo = ax_geo.secondary_xaxis("top", functions=(
             lambda step : T_i - step*dT, lambda T : (T_i-T)/dT
     ))
     ax2_geo.set_xlabel("Temperature $T$")
-    step_ticks = ax_geo.get_xticks()
-    T_ticks = (T_i - step_ticks)/dT
-    ax2_geo.set_xticks(T_ticks)
 
     ax.set_title(f"{num_at_T*T_steps} monte carlo steps, $dT={dT}$, {num_at_T} steps per T")
     if path != "":

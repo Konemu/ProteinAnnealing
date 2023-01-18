@@ -48,35 +48,16 @@ def evolve_protein_plot_energy(length, mc_steps, T, path):
     fig, ax = plt.subplots()
     ax.plot(np.asarray(range(mc_steps)), ergs, label=f"$L={length}$") # plot energy
     ax.set_xlabel("Time step $t$")
-    ax.set_ylabel("Total energy $E$")
+    ax.set_ylabel("Total energy per site $E/L$")
     ax.legend()
     ax.set_title(f"{mc_steps} monte carlo steps")
     if path != "":
         fig.savefig(path+f"/energy_l_{length}_steps_{mc_steps}.pdf")
 
+    print("Barriers:")
     barrier.barrier(mc_steps, ergs)
 
     return fig, ax, ergs, grid, coord_vec, figPrev, axPrev
-
-
-
-#   geklonte Fkt von oben.
-def evolve_protein_plot_energy_var_temp(length, mc_steps, T, path):
-    grid, coord_vec = randomwalk.self_avoiding_walk_protein(length, length)
-    while coord_vec[-1].x == 0: # discard the protein and re-generate if it doesn't have full length
-        grid, coord_vec = randomwalk.self_avoiding_walk_protein(length, length)
-    if path != "":
-        randomwalk.plot_protein(coord_vec, length/3, path+f"/protein_init_l_{length}_steps_{mc_steps}.pdf") # plot initial state
-
-    J = random_exchange_matrix() # generate a random exchange matrix
-    ergs = np.empty(mc_steps, dtype=np.double) # save energy at each step
-    for k in range(mc_steps):
-        grid, coord_vec = monte_carlo_step(grid, coord_vec, J, T[k]) # perform mc steps
-        ergs[k] = total_erg_per_site(grid, coord_vec, J)
-    if path != "":
-        randomwalk.plot_protein(coord_vec, length/3, path+f"/protein_final_l_{length}_steps_{mc_steps}.pdf") # plot final state
-
-    return ergs, coord_vec
 
 # Perform a mc step on the grid, coor_vec pair as explained on the exercise sheet at given temperature T.
 @njit
@@ -85,11 +66,23 @@ def monte_carlo_step(grid, coord_vec, J, T):
     m = randint(0, protein_length) # select random peptide
     i, j = coord_vec[m].i, coord_vec[m].j # grid coords of the selected peptide
 
+    #print(m) # TODO rm
+    #print(  check_fold_validity(grid, coord_vec, m, i, j, 1, 1), 
+    #        check_fold_validity(grid, coord_vec, m, i, j, 1, -1),
+    #        check_fold_validity(grid, coord_vec, m, i, j, -1, 1),
+    #        check_fold_validity(grid, coord_vec, m, i, j, -1, -1))
+    
+    foldlist = [1,1], [1, -1], [-1, 1], [-1,-1]
+
     # check the validity of all theoretically possible folds and perform the valid one (depending on delta E, see below)
-    new_grid, new_coord_vec = check_and_perform_fold(grid, coord_vec, J, T, m, i, j,  1,  1) # up-right
-    new_grid, new_coord_vec = check_and_perform_fold(grid, coord_vec, J, T, m, i, j,  1, -1) # down-right
-    new_grid, new_coord_vec = check_and_perform_fold(grid, coord_vec, J, T, m, i, j, -1,  1) # up-left
-    new_grid, new_coord_vec = check_and_perform_fold(grid, coord_vec, J, T, m, i, j, -1, -1) # down-left
+    if m == 0 or m == protein_length-1:
+        for foldindex in np.random.permutation(4): # don't prefer a direction -> shuffle
+            new_grid, new_coord_vec, bool = check_and_perform_fold(grid, coord_vec, J, T, m, i, j,  foldlist[foldindex][0],  foldlist[foldindex][1]) 
+            if bool:
+                break
+    else:
+        for fold in foldlist:
+            new_grid, new_coord_vec, bool = check_and_perform_fold(grid, coord_vec, J, T, m, i, j,  fold[0],  fold[1]) 
 
     return new_grid, new_coord_vec
 
@@ -105,12 +98,13 @@ def check_and_perform_fold(grid, coord_vec, J, T, m, i, j, delta_i, delta_j):
         new_coord_vec = copy_coord_vec(coord_vec) # same spiel for the coordinate vector
         new_coord_vec[m].move_to_indices(i+delta_i, j+delta_j)
         delta_E = local_erg(new_grid, new_coord_vec, m, J) - local_erg(grid, coord_vec, m, J)
-        if delta_E <= 0: # negative energy change: keep change
-            return new_grid, new_coord_vec
+        #delta_E = (total_erg_per_site(new_grid, new_coord_vec, J) - total_erg_per_site(grid, coord_vec, J))*len(coord_vec)
+        if delta_E <= 1e-10: # negative energy change: keep change
+            return new_grid, new_coord_vec, True
         elif rand() < np.exp(-delta_E/T): # positive energy change: keep change only at a certain chance
-            return new_grid, new_coord_vec
+            return new_grid, new_coord_vec, True
 
-    return grid, coord_vec
+    return grid, coord_vec, False
 
 
 # this does pretty much exactly what it says
@@ -279,7 +273,7 @@ def animated_monte_carlo(length, mc_steps, T, frame_interval, fps, path):
 
     print("MC done, saving gif. This may take a while.")
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(30, 15))
+    fig, (ax1, ax2) = plt.subplots(1, 2)
     for i in range(len(grids_vecs[0][1])):
         if i > 0:
             ax1.plot([grids_vecs[0][1][i].x, grids_vecs[0][1][i-1].x], [grids_vecs[0][1][i].y, grids_vecs[0][1][i-1].y], color="black")
@@ -294,10 +288,11 @@ def animated_monte_carlo(length, mc_steps, T, frame_interval, fps, path):
     ax1.set_ylabel("$y$")
     ax1.set_aspect('equal')
     ax2.set_xlabel("Time step $t$")
-    ax2.set_ylabel("Total energy $E$")
+    ax2.set_ylabel("Total energy per site $E/L$")
     ax2.set_title(f"{mc_steps} monte carlo steps")
     fig.colorbar(ScalarMappable(norm = cols.Normalize(1, 20), cmap=cols.LinearSegmentedColormap.from_list("a", randomwalk.cmap, 20)),
                                 ax=ax1, label="Amino acid")
+    fig.set_dpi(150)
     fig.tight_layout()
 
 
@@ -305,7 +300,7 @@ def animated_monte_carlo(length, mc_steps, T, frame_interval, fps, path):
 
     if path != "":
         writer = PillowWriter(fps=fps)
-        anim.save(path+f"/anim_test.gif", writer=writer)
+        anim.save(path+f"/anim_test_length_{length}_steps_{mc_steps}_T_{T}.gif", writer=writer)
 
     return anim, fig, ax1, ax2, grids_vecs
 
